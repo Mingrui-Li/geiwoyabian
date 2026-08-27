@@ -31,6 +31,7 @@ Do not infer the next task from chat history. Repository status and task cards c
 
 ## Engineering constraints
 
+- `GWP-026` Figma design freeze is a hard prerequisite for every Cocos task. Before it is `DONE`, do not initialize, merge, or implement the formal Cocos project, scenes, HUD, navigation, prefabs, or gameplay flow.
 - Target Cocos Creator 3.8.7+ and TypeScript.
 - Keep core gameplay independent from Douyin APIs. All platform calls belong behind a platform adapter.
 - Prefer data-driven item variants over item-specific scripts.
@@ -40,6 +41,7 @@ Do not infer the next task from chat history. Repository status and task cards c
 - Figma is the source of truth for all final player-facing screens. Do not invent final UI directly in Cocos.
 - gpt-image-2 outputs are visual inputs, not finished screen designs. Compose, align, tokenize, and validate them in Figma before implementation.
 - Use exact Figma nodes plus screenshots when implementing UI, and perform a visual parity pass before considering a screen complete.
+- Figma design-system mutations are sequential. Never run two design-writing windows or `use_figma` mutations against this project at the same time.
 
 ## Code conventions
 
@@ -52,6 +54,7 @@ Do not infer the next task from chat history. Repository status and task cards c
 
 - Do not edit `.idea/` or other user-local IDE files.
 - Do not add progression, monetization, social, or content systems before the core feel milestone passes its acceptance test.
+- Do not start a Cocos graybox before the complete Figma screen system, states, responsive frames, prototype, and Dev Handoff have passed review.
 - Do not reduce the product target to a prototype or MVP. Milestones are validation stages on the way to the complete v1.0 scope in `docs/PROJECT_PLAN.md`.
 - Do not add leaderboards, guilds, a home/base system, story, or multiplayer; these are permanent product exclusions.
 - Verification should include a Cocos build check and a playable interaction check once the project is initialized.
