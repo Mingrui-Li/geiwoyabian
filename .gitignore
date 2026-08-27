@@ -1,0 +1,11 @@
+.idea/
+.DS_Store
+node_modules/
+library/
+local/
+temp/
+build/
+dist/
+profiles/
+native/
+*.log
