@@ -31,7 +31,7 @@
 
 - 本规格中的关卡、星数、数量与时间均为可直接放入设计稿的数据样例。
 - 加载超过 8 秒才出现“重新加载”；短暂加载只显示进度和取消/返回（若流程允许）。
-- 离线时本地玩法继续可用；仅今日订单刷新、广告和分享发布等平台能力显示离线限制。
+- 离线时本地玩法和按本机日期生成的今日订单继续可用；仅广告、分享发布等平台能力显示离线限制。
 - 错误必须同时提供恢复动作与安全返回动作，禁止只有“知道了”的死路。
 - 组件编号引用 `COMPONENT_INVENTORY.md`；资产编号引用 `ASSET_REQUIREMENTS.md`。
 
@@ -121,7 +121,7 @@
 - 次要动作：切换关卡、切换主题、返回。
 - 出口：S09；返回 S07 或来源页；锁定关点击后留在本屏展示“再获得 3 星解锁”。
 - 数据样例：第 5 关“耳机别打结”，10 件物品，最佳 2 星，最佳分 8,460。
-- 元素映射：`C-LevelCard`、`C-LevelDetailBar`、`A-StarRating`、`C-TopBar/Page`；`THM-THUMB-*`。
+- 元素映射：`C-LevelCard`、`C-LevelDetailBar`、`A-StarRating`、`C-TopBar/Page`；`BG-WORKSHOP-01..05`。
 
 ### S09 游戏 HUD
 
@@ -153,7 +153,7 @@
 - 主要动作：长按蓄力、松手粉碎。
 - 次要动作：倒塌动画结束前无可点操作；结束后“看结果”。
 - 出口：到 S12；生成回放失败也继续到 S12，并在结果页标记“本局未生成回放”。
-- 元素映射：`G-TowerHUD`、`G-ChargeRing`、`G-TowerStack`、`G-ScoreTicker`；`MCH-HAMMER-*`、`FX-TOWER-*`。
+- 元素映射：`G-TowerHUD`、`G-ChargeRing`、`G-TowerStack`、`G-ScoreTicker`；`MCH-HAMMER-01`、`FX-TOWER-*`。
 
 ### S12 关卡结果
 
@@ -164,7 +164,7 @@
 - 次要动作：“再来一次”“分享精彩”“返回选关”。
 - 出口：S09、S22、S08；产生奖励时以内嵌条展示，重大解锁才转 S13。
 - 状态/反馈：不使用“失败”；未达解锁星数显示可重玩的改进提示。
-- 元素映射：`G-LevelResultPanel`、`A-StarRating`、`C-ResultBreakdown`、`A-Button/*`；`ILL-RESULT-01`、`FX-REWARD-*`。
+- 元素映射：`G-LevelResultPanel`、`A-StarRating`、`C-ResultBreakdown`、`A-Button/*`；`ILL-RESULT-01`、`FX-REWARD-01`。
 
 ### S13 解锁奖励
 
@@ -217,7 +217,7 @@
 - 主要动作：“开始订单”或完成后的“再做一次”。
 - 次要动作：规则说明、返回。
 - 出口：今日订单 HUD 变体；完成后 S12 订单变体；返回来源页。
-- 离线策略：若今日种子已缓存则可玩并标记“离线记录，联网后校准日期”；未缓存则展示 S24 离线态和“玩普通关卡”。
+- 本地策略：使用版本化规则和本机日期确定性生成当日种子，离线完整可玩；本地配置损坏时进入 S24 错误态，可“重新生成”或“玩普通关卡”。跨日恢复先完成旧订单，再按当前本机日期生成新订单。
 - 元素映射：`C-DailyOrderCard`、`C-RuleModifier`、`C-ItemPreviewStrip`、`A-StatusBadge`；`ILL-MODE-02`。
 
 ### S18 连续压与本地最佳

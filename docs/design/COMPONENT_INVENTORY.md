@@ -44,7 +44,7 @@
 | C-LoadingPanel | 加载面板 | 插画、阶段、进度、说明、重试槽 | Loading, Slow, Error, Offline, Completed | S01 |
 | C-JourneyHeroCard | 继续关卡主卡 | 主题、关卡名、进度、主动作 | Default, Loading, Locked, Completed, Error | S05 |
 | C-ThemeProgress | 主题进度条 | 名称、关卡数、星数 | Default, Completed | S05 |
-| C-DailyTeaser | 今日订单提醒卡 | 日期、完成度、规则短句 | New, InProgress, Completed, Offline | S05 |
+| C-DailyTeaser | 今日订单提醒卡 | 日期、完成度、规则短句 | New, InProgress, Completed, DateChanged | S05 |
 | C-ModeCard | 模式卡 | 插画、标题、规则、记录、动作 | Default, Pressed, Locked, Completed, Loading, Error | S06 |
 | C-ThemeCard | 主题大卡 | 背景、代表物品、进度、奖励 | Default, Selected, Locked, Completed, Loading, Error | S07 |
 | C-LevelCard | 关卡卡 | 关号、星级、状态 | Default, Selected, Locked, Completed, Perfect, Loading | S08 |
@@ -56,7 +56,7 @@
 | C-ResultVariantCard | 三结果卡 | 插画、结果名、发现提示、最佳记录 | Locked, Discovered, Selected, Completed | S15 |
 | C-ItemPicker | 物品选择器 | 搜索不提供；主题筛选+网格 | Default, Loading, Empty, Error | S16 |
 | C-SelectedQueue | 已选队列 | 1–10 件、拖动排序、移除 | Empty, Default, Full, Error | S16 |
-| C-DailyOrderCard | 今日订单主卡 | 日期、进度、规则、成绩 | Default, Loading, Locked, Completed, Offline, Error | S17 |
+| C-DailyOrderCard | 今日订单主卡 | 日期、进度、规则、成绩 | Default, Loading, Locked, Completed, DateChanged, Error | S17 |
 | C-RuleModifier | 规则变化条 | 图标、标题、一句说明 | Default, Warning | S17 |
 | C-ItemPreviewStrip | 物品预览条 | 12 件缩略图、完成勾选 | Default, InProgress, Completed, Loading | S17 |
 | C-EndlessSummary | 连续压摘要 | 最佳/本次、件数、主动作 | Ready, NoRecord, Result, NewRecord, Error | S18 |
