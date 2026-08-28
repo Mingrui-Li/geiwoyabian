@@ -30,7 +30,7 @@ Figma 是所有正式玩家界面的唯一设计源。生成图片不能直接�
 
 - 唯一设计入口：[mini-game / node 11:7101](https://www.figma.com/design/83pqrCcig644vC20QXM5G1/mini-game?node-id=11-7101)。`11:7101` 是进入共享 Page 的定位锚点，不代表可以覆盖其相邻节点。
 - 受当前 Figma 方案限制，本项目与其他项目共用同一个 Page，不新建独立 Page。所有本项目节点必须收纳在顶层 Section `GWP_给我压扁` 内，并保持清晰的命名前缀，禁止移动、重命名或覆盖 Section 外节点。
-- 当前 Codex 环境优先使用已安装的 `figma-mcp-rust` 访问该文件，避免依赖官方 Figma MCP 的免费调用额度；任何写入仍须先加载对应 Figma 写入技能，并先检查目标节点和编辑所有权。
+- 所有Figma查询与写入统一使用已安装的`figma-mcp-rust`，禁止调用官方Figma MCP；任何写入仍须先加载对应Figma写入技能，并先检查目标节点和编辑所有权。当前0.2.0工具清单没有暴露variable scope与code syntax写入接口，GWP-014必须在创建变量前先升级、扩展或实测解决，不能降低验收标准。v1不依赖远程design library。
 
 ### 实际任务映射
 

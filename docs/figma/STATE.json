@@ -96,7 +96,10 @@
     "confirmationMessage": "插件已连接，确认范围"
   },
   "tools": {
-    "preferred": "figma-mcp-rust 0.2.0",
+    "required": "figma-mcp-rust 0.2.0",
+    "officialFigmaMcpAllowed": false,
+    "policyConfirmedAt": "2026-08-28",
+    "capabilityGap": "The current 0.2.0 tool list does not expose variable scope or code-syntax setters; GWP-014 must resolve this within the figma-mcp-rust toolchain before creating variables.",
     "server": {
       "host": "127.0.0.1",
       "port": 1994,
@@ -118,7 +121,8 @@
     "sectionMetadata": "passed: unique node 337:139, exact bounds, childCount 0",
     "sectionScreenshot": "passed: docs/figma/screenshots/gwp-013-section-337-139.png",
     "outsideNodeIntegrity": "passed: 8 pre-existing top-level nodes unchanged",
-    "gitDiffCheck": "passed on 2026-08-28"
+    "gitDiffCheck": "passed on 2026-08-28",
+    "integrationRecheck": "passed on 2026-08-28 via figma-mcp-rust 0.2.0; current export SHA-256 matched repository evidence"
   },
   "completedSteps": [
     "P0.a",
@@ -134,7 +138,8 @@
   "pending": [
     "GWP-014: create the confirmed foundations inside Section 337:139 only",
     "GWP-014: recheck loadable font family, weights, and licensing before filling typography family/style values",
-    "Optional audit: repeat remote component search if official Figma MCP quota becomes available; v1 has no remote-library dependency"
+    "GWP-014: resolve and verify variable scope/code-syntax writes within figma-mcp-rust before creating variables",
+    "Optional audit: use remote component search only if a future figma-mcp-rust version exposes it; official Figma MCP is prohibited and v1 has no remote-library dependency"
   ],
   "lastUpdated": "2026-08-28"
 }

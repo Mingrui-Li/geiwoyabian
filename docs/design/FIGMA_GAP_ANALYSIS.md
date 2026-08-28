@@ -45,7 +45,7 @@ Run ID：`gwp-013-20260828-01`
 - scoped component search 与后续最小参数诊断均被官方 Starter MCP 限额拒绝；完整错误为“reached the Figma MCP tool call limit on the Starter plan”。
 - 本地 `figma-mcp-rust 0.2.0` 已成功启动为 `LEADER`，但其 73 个工具不包含远程 library search；它用于后续无 REST 限额的本地文件读写。
 
-因此不能声称远程库“没有组件”。v1 方案明确不把远程库作为依赖：Material/Apple 的视觉语言、状态 API 与本项目 70 个游戏组件不匹配，且跨库依赖会削弱后续 Cocos 映射的确定性。后续若再次获得远程搜索能力，只能把结果作为审计证据；任何改为 import/wrap 的决定必须先更新本文并再次确认。
+因此不能声称远程库“没有组件”。v1 方案明确不把远程库作为依赖：Material/Apple 的视觉语言、状态 API 与本项目 70 个游戏组件不匹配，且跨库依赖会削弱后续 Cocos 映射的确定性。用户于2026-08-28进一步明确：后续Figma任务禁止调用官方Figma MCP，统一使用`figma-mcp-rust`。若未来`figma-mcp-rust`增加远程library search，只能把结果作为审计证据；任何改为import/wrap的决定必须先更新本文并再次确认。
 
 ## 2. Gap 分类
 
@@ -80,6 +80,7 @@ Run ID：`gwp-013-20260828-01`
 | 正式字体尚未决定 | 本任务锁定 7 个文字角色和 token 槽位；字体家族、字重可加载性与授权在 GWP-014 决定 |
 | TextStyle 在 headless Plugin API 中不能绑定变量 | GWP-014 创建变量与原始值一致的 Text Style，并在台账记录这个工具限制；不伪造绑定成功 |
 | 官方 library search 受 Starter 限额阻断 | 记录失败，不把错误解释为空结果；v1 不依赖远程库，后续可用时再审计 |
+| `figma-mcp-rust 0.2.0`当前工具清单没有variable scope与code syntax写入接口 | GWP-014创建变量前必须先在同一工具链内升级、扩展或实测解决；未解决时停止，不降低变量验收标准 |
 
 ## 3. v1 变量精确清单
 

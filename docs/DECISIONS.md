@@ -69,7 +69,7 @@
 
 - 日期：2026-08-27
 - 状态：ACCEPTED
-- 决策：正式设计使用指定的 [mini-game Figma 入口](https://www.figma.com/design/83pqrCcig644vC20QXM5G1/mini-game?node-id=11-7101)；受当前方案限制，不新建独立 Page，而是在共享 Page 内维护顶层 `GWP_给我压扁` Section。当前 Codex 环境优先使用已安装的 `figma-mcp-rust`。
+- 决策：正式设计使用指定的 [mini-game Figma 入口](https://www.figma.com/design/83pqrCcig644vC20QXM5G1/mini-game?node-id=11-7101)；受当前方案限制，不新建独立 Page，而是在共享 Page 内维护顶层 `GWP_给我压扁` Section。Figma工具链遵循D-014。
 - 影响：所有 Figma 读写必须先定位该 Section、确认节点所有权，并保护同一 Page 上其他项目的节点；逻辑页面改用 Section 内一级 Frame 组织。
 
 ## D-011：锁定24类屏幕与四项主导航
@@ -92,3 +92,10 @@
 - 状态：ACCEPTED
 - 决策：激励广告只允许出现在关卡前神秘物品、结果页双倍图鉴材料、外观单局体验和分享特效包装四类可选奖励点；不在连续按压中弹出，不使用焦虑倒计时，不把基础关卡继续权或正式进度绑定广告。
 - 影响：Figma的S23必须明确收益、取消、加载、跳过、不可用和只发一次的结果状态；Cocos平台适配需要保证广告失败、取消、断网或回执未知时不扣权益、不回滚本地进度。
+
+## D-014：Figma工具链固定为figma-mcp-rust
+
+- 日期：2026-08-28
+- 状态：ACCEPTED
+- 决策：后续所有Figma查询、创建、修改和删除统一使用已安装的`figma-mcp-rust`与本地插件桥接，禁止调用官方Figma MCP。v1不依赖远程design library。
+- 影响：新窗口必须先确认`figma-mcp-rust`为LEADER且插件已连接；不能因官方MCP限额或远程搜索缺失降低验收标准。当前0.2.0工具清单没有暴露variable scope与code syntax写入接口，GWP-014必须在创建变量前先于同一工具链内升级、扩展或实测解决，未解决时停止并记录阻断。
