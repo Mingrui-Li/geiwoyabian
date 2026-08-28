@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "runId": "gwp-013-20260828-01",
+  "taskId": "GWP-013",
+  "branch": "codex/gwp-013-figma-discovery",
+  "phase": "phase0-complete",
+  "step": "gwp-013-handoff",
+  "file": {
+    "name": "mini-game",
+    "key": "83pqrCcig644vC20QXM5G1",
+    "url": "https://www.figma.com/design/83pqrCcig644vC20QXM5G1/mini-game?node-id=11-7101",
+    "editorType": "figma"
+  },
+  "page": {
+    "anchorId": "11:7101",
+    "id": "11:7101",
+    "name": "shanliyoubao",
+    "topLevelCountAtDiscovery": 8,
+    "topLevelCountAfterSectionCreation": 9,
+    "outsideSectionNodeIds": [
+      "237:4332",
+      "237:4369",
+      "238:4508",
+      "238:4509",
+      "248:5085",
+      "267:5160",
+      "267:5161",
+      "267:5162"
+    ],
+    "rightmostBoundaryAtDiscovery": 19650,
+    "bottommostBoundaryAtDiscovery": 12600
+  },
+  "section": {
+    "name": "GWP_给我压扁",
+    "id": "337:139",
+    "created": true,
+    "plannedBounds": {
+      "x": 20050,
+      "y": 0,
+      "width": 6400,
+      "height": 14000
+    },
+    "actualBounds": {
+      "x": 20050,
+      "y": 0,
+      "width": 6400,
+      "height": 14000
+    },
+    "childCount": 0,
+    "rightGapFromExistingContent": 400
+  },
+  "evidence": {
+    "sectionScreenshot": "docs/figma/screenshots/gwp-013-section-337-139.png",
+    "screenshotScope": "isolated Section export",
+    "boundaryProof": "Final depth-1 Page metadata: 9 top-level Sections; existing rightmost boundary x=19650, new Section x=20050; existing node metadata unchanged",
+    "pageExportLimitation": "Figma PageNode cannot be exported; save_screenshots returned No nodes to export for 11:7101"
+  },
+  "discovery": {
+    "localVariableCollectionCount": 2,
+    "localVariableCount": 18,
+    "localComponentCount": 76,
+    "localComponentSetCount": 12,
+    "localStandaloneComponentCountInSection02": 28,
+    "localTextStyleCount": 7,
+    "localEffectStyleCount": 1,
+    "localPaintStyleCount": 15,
+    "localGridStyleCount": 1,
+    "remoteVariableCollectionCount": 0,
+    "librariesAddedCount": 8,
+    "librariesAvailableToAddCount": 0,
+    "libraryPaginationComplete": true,
+    "librarySearch": {
+      "attemptedAfterGetLibraries": true,
+      "tokenStyleBroadSearchReturnedNoMatches": true,
+      "componentSearchCompleted": false,
+      "blocker": "Official Figma Starter MCP tool-call limit; figma-mcp-rust 0.2.0 has no remote library search tool"
+    },
+    "fontFacts": {
+      "usedOnSharedPage": [
+        "Source Han Sans SC / Regular"
+      ],
+      "verifiedAvailableCandidate": "Noto Sans SC / Black, Bold, DemiLight, Light, Medium, Regular, Thin",
+      "formalFamilyDecisionDeferredToTask": "GWP-014"
+    },
+    "rustReadOnlyRecheck": "passed on 2026-08-28: metadata, variables, styles, local components, and used fonts"
+  },
+  "scope": {
+    "gapAnalysisPath": "docs/design/FIGMA_GAP_ANALYSIS.md",
+    "variableCount": 80,
+    "textStyleCount": 7,
+    "effectStyleCount": 5,
+    "gridStyleCount": 1,
+    "componentCount": 70,
+    "userConfirmed": true,
+    "confirmedAt": "2026-08-28",
+    "confirmationMessage": "插件已连接，确认范围"
+  },
+  "tools": {
+    "preferred": "figma-mcp-rust 0.2.0",
+    "server": {
+      "host": "127.0.0.1",
+      "port": 1994,
+      "role": "LEADER",
+      "pluginConnected": true
+    }
+  },
+  "entities": {
+    "variableCollections": {},
+    "variables": {},
+    "styles": {},
+    "frames": {},
+    "components": {},
+    "screens": {}
+  },
+  "validations": {
+    "anchorMetadata": "passed",
+    "topLevelBoundaryReadOnlyCheck": "passed",
+    "sectionMetadata": "passed: unique node 337:139, exact bounds, childCount 0",
+    "sectionScreenshot": "passed: docs/figma/screenshots/gwp-013-section-337-139.png",
+    "outsideNodeIntegrity": "passed: 8 pre-existing top-level nodes unchanged",
+    "gitDiffCheck": "passed on 2026-08-28"
+  },
+  "completedSteps": [
+    "P0.a",
+    "P0.b",
+    "P0.c",
+    "P0.d",
+    "P0.e",
+    "P0.f",
+    "scope-confirmed",
+    "section-created",
+    "figma-validations-passed"
+  ],
+  "pending": [
+    "GWP-014: create the confirmed foundations inside Section 337:139 only",
+    "GWP-014: recheck loadable font family, weights, and licensing before filling typography family/style values",
+    "Optional audit: repeat remote component search if official Figma MCP quota becomes available; v1 has no remote-library dependency"
+  ],
+  "lastUpdated": "2026-08-28"
+}
