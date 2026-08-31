@@ -7,7 +7,6 @@
 ```bash
 rg -n '^status: READY$' docs/tasks/GWP-*.md
 rg -n '^status: IN_PROGRESS$' docs/tasks/GWP-*.md
-rg -n '^status: REVIEW$' docs/tasks/GWP-*.md
 rg -n '^status: BLOCKED$' docs/tasks/GWP-*.md
 ```
 
@@ -31,14 +30,12 @@ rg -n '^status: BLOCKED$' docs/tasks/GWP-*.md
 任务窗口可以执行：
 
 - `READY → IN_PROGRESS`
-- `IN_PROGRESS → REVIEW`
+- `IN_PROGRESS → DONE`，仅限同一窗口已完成验收、主线集成、状态同步和依赖解锁
 - `IN_PROGRESS → BLOCKED`，但必须写明阻塞证据和下一步
-
-只有集成窗口可以执行：
-
 - `BLOCKED → READY`
-- `REVIEW → DONE`
 - 依赖变化与任务取消
+
+项目不再设置单独的审阅集成窗口。任务执行窗口对实现、真实验收、合并自己的分支和完成状态负责；验收失败时不得推进状态。
 
 ## 任务卡质量要求
 

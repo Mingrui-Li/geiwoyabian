@@ -12,6 +12,7 @@ started_at: null
 updated_at: 'YYYY-MM-DD'
 edit_scope:
   - path/or/module
+  - docs/STATUS.md
 do_not_edit:
   - unrelated/path
 ---
@@ -44,7 +45,7 @@ do_not_edit:
 
 ## 完成记录
 
-任务进入 `REVIEW` 前填写：
+任务进入 `DONE` 前由同一执行窗口填写并核验：
 
 - 实际完成：
 - 关键文件：
