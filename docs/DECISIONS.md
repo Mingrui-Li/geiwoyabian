@@ -98,4 +98,11 @@
 - 日期：2026-08-28
 - 状态：ACCEPTED
 - 决策：后续所有Figma查询、创建、修改和删除统一使用已安装的`figma-mcp-rust`与本地插件桥接，禁止调用官方Figma MCP。v1不依赖远程design library。
-- 影响：新窗口必须先确认`figma-mcp-rust`为LEADER且插件已连接；不能因官方MCP限额或远程搜索缺失降低验收标准。当前0.2.0工具清单没有暴露variable scope与code syntax写入接口，GWP-014必须在创建变量前先于同一工具链内升级、扩展或实测解决，未解决时停止并记录阻断。
+- 影响：新窗口必须先确认`figma-mcp-rust`为LEADER且插件已连接；不能因官方MCP限额或远程搜索缺失降低验收标准。GWP-014已在仓库内提供并实测companion plugin扩展，解决0.2.0缺失的variable scope、code syntax、alias与读回能力；后续需要这些能力的任务必须运行`docs/figma/tooling/figma-mcp-rust-gwp014/`清单对应的唯一命名开发插件，不能退回未扩展版本。
+
+## D-015：Figma Foundations v1 基线
+
+- 日期：2026-08-31
+- 状态：PROPOSED（等待GWP-014集成评审）
+- 决策：v1 Foundations固定使用7个单mode集合与80个变量、`Noto Sans SC Regular/Bold`、7个Text Style、5个Effect Style和1个四列移动网格；所有变量必须有明确scope和`var(--gwp-...)` WEB syntax，Semantic Color只alias Primitive。`Getting Started`作为`00_Cover`内容，不新增一级Frame。
+- 影响：GWP-015及后续Figma任务必须复用`docs/figma/FOUNDATIONS.md`与`docs/figma/STATE.json`中的精确ID，不复制token或另选字体/阴影。当前工具路径的TextStyle字段绑定、column-grid颜色和opacity binding导出限制必须保留为已知风险；尤其opacity用于组件前必须重新验证。该决定不改变产品范围，`PROJECT_PLAN.md`和`UI_DESIGN_WORKFLOW.md`无需同步；集成窗口评审通过后将状态改为`ACCEPTED`。

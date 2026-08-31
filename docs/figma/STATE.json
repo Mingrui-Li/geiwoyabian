@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "runId": "gwp-013-20260828-01",
-  "taskId": "GWP-013",
-  "branch": "codex/gwp-013-figma-discovery",
-  "phase": "phase0-complete",
-  "step": "gwp-013-handoff",
+  "runId": "gwp-014-20260831-01",
+  "taskId": "GWP-014",
+  "branch": "codex/gwp-014-figma-foundations",
+  "phase": "phase2-complete",
+  "step": "gwp-014-handoff",
   "file": {
     "name": "mini-game",
     "key": "83pqrCcig644vC20QXM5G1",
@@ -46,14 +46,25 @@
       "width": 6400,
       "height": 14000
     },
-    "childCount": 0,
+    "childCount": 10,
     "rightGapFromExistingContent": 400
   },
   "evidence": {
     "sectionScreenshot": "docs/figma/screenshots/gwp-013-section-337-139.png",
     "screenshotScope": "isolated Section export",
     "boundaryProof": "Final depth-1 Page metadata: 9 top-level Sections; existing rightmost boundary x=19650, new Section x=20050; existing node metadata unchanged",
-    "pageExportLimitation": "Figma PageNode cannot be exported; save_screenshots returned No nodes to export for 11:7101"
+    "pageExportLimitation": "Figma PageNode cannot be exported; save_screenshots returned No nodes to export for 11:7101",
+    "gwp014CoverScreenshot": "docs/figma/screenshots/gwp-014-cover.png",
+    "gwp014OverviewScreenshot": "docs/figma/screenshots/gwp-014-foundations-overview.png",
+    "gwp014RegionScreenshots": [
+      "docs/figma/screenshots/gwp-014-foundation-color.png",
+      "docs/figma/screenshots/gwp-014-foundation-typography.png",
+      "docs/figma/screenshots/gwp-014-foundation-spacing.png",
+      "docs/figma/screenshots/gwp-014-foundation-radius-stroke.png",
+      "docs/figma/screenshots/gwp-014-foundation-opacity-layer.png",
+      "docs/figma/screenshots/gwp-014-foundation-effects.png",
+      "docs/figma/screenshots/gwp-014-foundation-motion.png"
+    ]
   },
   "discovery": {
     "localVariableCollectionCount": 2,
@@ -99,7 +110,14 @@
     "required": "figma-mcp-rust 0.2.0",
     "officialFigmaMcpAllowed": false,
     "policyConfirmedAt": "2026-08-28",
-    "capabilityGap": "The current 0.2.0 tool list does not expose variable scope or code-syntax setters; GWP-014 must resolve this within the figma-mcp-rust toolchain before creating variables.",
+    "capabilityGap": "resolved by repository-local GWP-014 companion-plugin extension over the installed figma-mcp-rust 0.2.0 server",
+    "capabilityProbe": {
+      "verifiedAt": "2026-08-31",
+      "scope": "WIDTH_HEIGHT",
+      "codeSyntax": "var(--gwp-capability-probe)",
+      "roundTrip": "passed",
+      "cleanup": "passed: temporary collection VariableCollectionId:348:139 deleted"
+    },
     "server": {
       "host": "127.0.0.1",
       "port": 1994,
@@ -108,20 +126,220 @@
     }
   },
   "entities": {
-    "variableCollections": {},
-    "variables": {},
-    "styles": {},
-    "frames": {},
+    "variableCollections": {
+      "GWP / Color Primitives": {
+        "id": "VariableCollectionId:348:141",
+        "modeId": "348:1",
+        "modeName": "Default"
+      },
+      "GWP / Color Semantics": {
+        "id": "VariableCollectionId:348:142",
+        "modeId": "348:2",
+        "modeName": "Default"
+      },
+      "GWP / Layout": {
+        "id": "VariableCollectionId:348:143",
+        "modeId": "348:3",
+        "modeName": "Default"
+      },
+      "GWP / Opacity": {
+        "id": "VariableCollectionId:348:144",
+        "modeId": "348:4",
+        "modeName": "Default"
+      },
+      "GWP / Motion": {
+        "id": "VariableCollectionId:348:145",
+        "modeId": "348:5",
+        "modeName": "Default"
+      },
+      "GWP / Layer": {
+        "id": "VariableCollectionId:348:146",
+        "modeId": "348:6",
+        "modeName": "Default"
+      },
+      "GWP / Typography": {
+        "id": "VariableCollectionId:348:147",
+        "modeId": "348:7",
+        "modeName": "Default"
+      }
+    },
+    "variables": {
+      "GWP / Color Primitives/yellow/500": "VariableID:348:148",
+      "GWP / Color Primitives/red/500": "VariableID:348:149",
+      "GWP / Color Primitives/ink/900": "VariableID:348:150",
+      "GWP / Color Primitives/mint/500": "VariableID:348:151",
+      "GWP / Color Primitives/cream/100": "VariableID:348:152",
+      "GWP / Color Primitives/white/0": "VariableID:348:153",
+      "GWP / Color Semantics/brand": "VariableID:348:154",
+      "GWP / Color Semantics/accent": "VariableID:348:155",
+      "GWP / Color Semantics/success": "VariableID:348:156",
+      "GWP / Color Semantics/warning": "VariableID:348:157",
+      "GWP / Color Semantics/danger": "VariableID:348:158",
+      "GWP / Color Semantics/surface": "VariableID:348:159",
+      "GWP / Color Semantics/text/primary": "VariableID:348:160",
+      "GWP / Color Semantics/text/secondary": "VariableID:348:161",
+      "GWP / Color Semantics/disabled": "VariableID:348:162",
+      "GWP / Layout/spacing/4": "VariableID:348:163",
+      "GWP / Layout/spacing/8": "VariableID:348:164",
+      "GWP / Layout/spacing/12": "VariableID:348:165",
+      "GWP / Layout/spacing/16": "VariableID:348:166",
+      "GWP / Layout/spacing/24": "VariableID:348:167",
+      "GWP / Layout/spacing/32": "VariableID:348:168",
+      "GWP / Layout/spacing/48": "VariableID:348:169",
+      "GWP / Layout/radius/8": "VariableID:348:170",
+      "GWP / Layout/radius/12": "VariableID:348:171",
+      "GWP / Layout/radius/20": "VariableID:348:172",
+      "GWP / Layout/radius/28": "VariableID:348:173",
+      "GWP / Layout/radius/pill": "VariableID:348:174",
+      "GWP / Layout/stroke/sticker-white": "VariableID:348:175",
+      "GWP / Layout/stroke/sticker-ink": "VariableID:348:176",
+      "GWP / Layout/stroke/control": "VariableID:348:177",
+      "GWP / Layout/stroke/focus": "VariableID:348:178",
+      "GWP / Layout/size/touch-min": "VariableID:348:179",
+      "GWP / Layout/size/action-min": "VariableID:348:180",
+      "GWP / Layout/size/button-primary": "VariableID:348:181",
+      "GWP / Layout/size/canvas-min-width": "VariableID:348:182",
+      "GWP / Layout/size/canvas-base-width": "VariableID:348:183",
+      "GWP / Layout/size/canvas-base-height": "VariableID:348:184",
+      "GWP / Layout/size/content-gutter": "VariableID:348:185",
+      "GWP / Layout/size/content-max-width": "VariableID:348:186",
+      "GWP / Opacity/disabled": "VariableID:348:187",
+      "GWP / Opacity/secondary": "VariableID:348:188",
+      "GWP / Opacity/scrim": "VariableID:348:189",
+      "GWP / Opacity/pressed": "VariableID:348:190",
+      "GWP / Motion/duration/click": "VariableID:348:191",
+      "GWP / Motion/duration/transition": "VariableID:348:192",
+      "GWP / Motion/duration/reward": "VariableID:348:193",
+      "GWP / Motion/duration/impact-pause": "VariableID:348:194",
+      "GWP / Layer/background": "VariableID:348:195",
+      "GWP / Layer/machine": "VariableID:348:196",
+      "GWP / Layer/item": "VariableID:348:197",
+      "GWP / Layer/effects": "VariableID:348:198",
+      "GWP / Layer/hud": "VariableID:348:199",
+      "GWP / Layer/scrim": "VariableID:348:200",
+      "GWP / Layer/modal": "VariableID:348:201",
+      "GWP / Layer/system": "VariableID:348:202",
+      "GWP / Typography/family/display": "VariableID:348:203",
+      "GWP / Typography/family/body": "VariableID:348:204",
+      "GWP / Typography/style/regular": "VariableID:348:205",
+      "GWP / Typography/style/strong": "VariableID:348:206",
+      "GWP / Typography/size/display": "VariableID:348:207",
+      "GWP / Typography/size/page-title": "VariableID:348:208",
+      "GWP / Typography/size/card-title": "VariableID:348:209",
+      "GWP / Typography/size/body": "VariableID:348:210",
+      "GWP / Typography/size/caption": "VariableID:348:211",
+      "GWP / Typography/size/number": "VariableID:348:212",
+      "GWP / Typography/size/micro": "VariableID:348:213",
+      "GWP / Typography/line-height/display": "VariableID:348:214",
+      "GWP / Typography/line-height/page-title": "VariableID:348:215",
+      "GWP / Typography/line-height/card-title": "VariableID:348:216",
+      "GWP / Typography/line-height/body": "VariableID:348:217",
+      "GWP / Typography/line-height/caption": "VariableID:348:218",
+      "GWP / Typography/line-height/number": "VariableID:348:219",
+      "GWP / Typography/line-height/micro": "VariableID:348:220",
+      "GWP / Typography/letter-spacing/display": "VariableID:348:221",
+      "GWP / Typography/letter-spacing/page-title": "VariableID:348:222",
+      "GWP / Typography/letter-spacing/card-title": "VariableID:348:223",
+      "GWP / Typography/letter-spacing/body": "VariableID:348:224",
+      "GWP / Typography/letter-spacing/caption": "VariableID:348:225",
+      "GWP / Typography/letter-spacing/number": "VariableID:348:226",
+      "GWP / Typography/letter-spacing/micro": "VariableID:348:227"
+    },
+    "styles": {
+      "GWP/Type/Display": "S:7bb864a76131495c28a3a74eddbc44ab277c2efb,",
+      "GWP/Type/PageTitle": "S:45a43616a406ab2aab560bc936cda9f14f8cbca0,",
+      "GWP/Type/CardTitle": "S:22998cd07d37caf417f635bfb611c9f3b16ef480,",
+      "GWP/Type/Body": "S:d065ae0ed3d5e0775488356e2690b287d9fe15f6,",
+      "GWP/Type/Caption": "S:d72848a8adb4a2e5c5be962dce7a1f5ad0770b42,",
+      "GWP/Type/Number": "S:7be40e1f79569df8dd4fc6e2503273a155e843e5,",
+      "GWP/Type/Micro": "S:80971c43e362338eb4ad6f7d73a7533903484b5a,",
+      "GWP/Effect/Sticker/Default": "S:ff0c87d7911925ecc3882e242506be3a3bc3648a,",
+      "GWP/Effect/Sticker/Pressed": "S:4d32459b54ecdf0de196b1d279ffbf167e1dc710,",
+      "GWP/Effect/Surface/Raised": "S:85566bbfc72cfde1881302ebcfb34dab371fdb77,",
+      "GWP/Effect/Focus": "S:124957b8a54c63ebc72d591a0015c942c673d13e,",
+      "GWP/Effect/Impact/Highlight": "S:17dc7273b8e3ff8ef35bbcc094cbb42b97474eb8,",
+      "GWP/Grid/Mobile/SafeColumns": "S:3a7b005a995a32a6143b0bffe1db592650743ba8,"
+    },
+    "frames": {
+      "00_Cover": "348:241",
+      "01_Foundations": "348:242",
+      "02_Components": "348:243",
+      "03_User_Flows": "348:244",
+      "04_Core_Screens": "348:245",
+      "05_Modes_And_Collection": "348:246",
+      "06_Overlays_And_States": "348:247",
+      "07_Prototype": "348:248",
+      "08_Dev_Handoff": "348:249",
+      "99_Archive": "348:250",
+      "Foundation/01_Color": "348:251",
+      "Foundation/02_Typography": "348:252",
+      "Foundation/03_Spacing": "348:253",
+      "Foundation/04_Radius_Stroke": "348:254",
+      "Foundation/05_Opacity_Layer": "348:255",
+      "Foundation/06_Effects": "348:256",
+      "Foundation/07_Motion": "348:257"
+    },
+    "documentationNodes": {
+      "coverAndSkeleton": [
+        "348:258", "348:259", "348:260", "348:261", "348:262", "348:263",
+        "348:264", "348:265", "348:266", "348:267", "348:268", "348:269",
+        "348:270", "348:271", "348:272", "348:273", "348:274", "348:275",
+        "348:276", "348:277", "348:278", "348:279"
+      ],
+      "color": [
+        "348:280", "348:281", "348:282", "348:283", "348:284", "348:285",
+        "348:286", "348:287", "348:288", "348:289", "348:290", "348:291",
+        "348:292", "348:293", "348:294", "348:295", "348:296", "348:297",
+        "348:298", "348:299", "348:300"
+      ],
+      "typography": [
+        "348:301", "348:302", "348:303", "348:304", "348:305", "348:306",
+        "348:307", "348:308", "348:309", "348:310", "348:311", "348:312",
+        "348:313", "348:314", "348:315", "348:316"
+      ],
+      "spacing": [
+        "348:317", "348:318", "348:319", "348:320", "348:321", "348:322",
+        "348:323", "348:324", "348:325", "348:326", "348:327", "348:328",
+        "348:329", "348:330", "348:331", "348:332"
+      ],
+      "radiusStroke": [
+        "348:333", "348:334", "348:335", "348:336", "348:337", "348:338",
+        "348:339", "348:340", "348:341", "348:342", "348:343", "348:344",
+        "348:345", "348:346", "348:347", "348:348", "348:349", "348:350",
+        "348:351", "348:352"
+      ],
+      "opacityLayer": [
+        "348:353", "348:354", "348:355", "348:356", "348:357", "348:358",
+        "348:359", "348:360", "348:361", "348:362", "348:363"
+      ],
+      "effects": [
+        "348:364", "348:365", "348:366", "348:367", "348:368", "348:369",
+        "348:370", "348:371", "348:372", "348:373", "348:374", "348:375",
+        "348:376"
+      ],
+      "motion": [
+        "348:377", "348:378", "348:379", "348:380", "348:381", "348:382",
+        "348:383", "348:384", "348:385", "348:386", "348:387"
+      ]
+    },
     "components": {},
     "screens": {}
   },
   "validations": {
     "anchorMetadata": "passed",
     "topLevelBoundaryReadOnlyCheck": "passed",
-    "sectionMetadata": "passed: unique node 337:139, exact bounds, childCount 0",
+    "sectionMetadata": "passed: unique node 337:139, exact bounds, childCount 10",
     "sectionScreenshot": "passed: docs/figma/screenshots/gwp-013-section-337-139.png",
     "outsideNodeIntegrity": "passed: 8 pre-existing top-level nodes unchanged",
-    "gitDiffCheck": "passed on 2026-08-28",
+    "gitDiffCheck": "passed on 2026-08-31 for GWP-014",
+    "gwp014CapabilityProbe": "passed on 2026-08-31: scope and WEB code syntax round-trip, temporary collection deleted",
+    "gwp014VariableAudit": "passed: 7 collections, 80 variables, 7 Default modes, 80 explicit scopes, 80 unique WEB syntaxes, 9 aliases",
+    "gwp014StyleAudit": "passed: 7 Noto Sans SC text styles, 5 effect styles, 1 four-column mobile grid style",
+    "gwp014FrameStructure": "passed: 10 exact first-level frames inside Section 337:139",
+    "gwp014FoundationMetadata": "passed: 7 regions with non-overlapping bounds and child counts 21/16/16/20/11/13/11",
+    "gwp014Screenshots": "passed: cover, overview, and 7 isolated region exports exist",
+    "gwp014VisualQa": "passed after outlining cream/white swatches and applying explicit resolved opacity values to documentation samples",
+    "gwp014KnownLimitations": "TextStyle fields cannot be variable-bound in this path; column-grid custom color is ignored; opacity variable binding did not render in export and must be revalidated for components",
     "integrationRecheck": "passed on 2026-08-28 via figma-mcp-rust 0.2.0; current export SHA-256 matched repository evidence"
   },
   "completedSteps": [
@@ -133,13 +351,23 @@
     "P0.f",
     "scope-confirmed",
     "section-created",
-    "figma-validations-passed"
+    "figma-validations-passed",
+    "P1.a",
+    "P1.b",
+    "P1.c",
+    "P1.d",
+    "P1.e",
+    "P1.f",
+    "P1.g",
+    "P1.h",
+    "P2.a",
+    "P2.b",
+    "P2.c"
   ],
   "pending": [
-    "GWP-014: create the confirmed foundations inside Section 337:139 only",
-    "GWP-014: recheck loadable font family, weights, and licensing before filling typography family/style values",
-    "GWP-014: resolve and verify variable scope/code-syntax writes within figma-mcp-rust before creating variables",
+    "Integration window: review GWP-014 and move REVIEW to DONE before unlocking GWP-015",
+    "GWP-015: revalidate opacity variable binding before relying on it in components",
     "Optional audit: use remote component search only if a future figma-mcp-rust version exposes it; official Figma MCP is prohibited and v1 has no remote-library dependency"
   ],
-  "lastUpdated": "2026-08-28"
+  "lastUpdated": "2026-08-31"
 }
