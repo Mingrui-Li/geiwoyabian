@@ -1,6 +1,6 @@
 {
-  "name": "Figma MCP Rust",
-  "id": "figma-mcp-rust",
+  "name": "Figma MCP Rust — GWP-014",
+  "id": "figma-mcp-rust-gwp-014",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/index.html",

@@ -29,7 +29,7 @@ Example envelope:
 1. Close the currently running `Figma MCP Rust` development plugin.
 2. Choose **Plugins → Development → Import plugin from manifest**.
 3. Select this directory's `manifest.json`.
-4. Run `Figma MCP Rust` again in the `mini-game` file and keep its window open.
+4. Run `Figma MCP Rust — GWP-014` in the `mini-game` file and keep its window open. The distinct name and development ID prevent Figma from launching the unpatched upstream plugin by mistake.
 
 The MCP server remains the installed 0.2.0 binary on `127.0.0.1:1994`; only the Figma-side bundle changes.
 
