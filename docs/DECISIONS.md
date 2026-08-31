@@ -54,7 +54,7 @@
 ## D-008：默认串行、有限并行
 
 - 日期：2026-08-27
-- 状态：ACCEPTED
+- 状态：SUPERSEDED（任务完成流程由D-016替代；串行与有限并行边界继续有效）
 - 决策：OPC默认使用串行接力；只有任务明确标记 `parallel_safe: true` 且编辑范围不重叠时，才能用独立分支/工作树并行。
 - 影响：只有集成窗口更新公共状态、合并分支和将任务置为DONE。
 
@@ -103,6 +103,13 @@
 ## D-015：Figma Foundations v1 基线
 
 - 日期：2026-08-31
-- 状态：PROPOSED（等待GWP-014集成评审）
+- 状态：ACCEPTED
 - 决策：v1 Foundations固定使用7个单mode集合与80个变量、`Noto Sans SC Regular/Bold`、7个Text Style、5个Effect Style和1个四列移动网格；所有变量必须有明确scope和`var(--gwp-...)` WEB syntax，Semantic Color只alias Primitive。`Getting Started`作为`00_Cover`内容，不新增一级Frame。
-- 影响：GWP-015及后续Figma任务必须复用`docs/figma/FOUNDATIONS.md`与`docs/figma/STATE.json`中的精确ID，不复制token或另选字体/阴影。当前工具路径的TextStyle字段绑定、column-grid颜色和opacity binding导出限制必须保留为已知风险；尤其opacity用于组件前必须重新验证。该决定不改变产品范围，`PROJECT_PLAN.md`和`UI_DESIGN_WORKFLOW.md`无需同步；集成窗口评审通过后将状态改为`ACCEPTED`。
+- 影响：GWP-015及后续Figma任务必须复用`docs/figma/FOUNDATIONS.md`与`docs/figma/STATE.json`中的精确ID，不复制token或另选字体/阴影。当前工具路径的TextStyle字段绑定、column-grid颜色和opacity binding导出限制必须保留为已知风险；尤其opacity用于组件前必须重新验证。该决定不改变产品范围。
+
+## D-016：任务采用单一执行窗口闭环
+
+- 日期：2026-08-31
+- 状态：ACCEPTED
+- 决策：从GWP-015开始取消“执行窗口完成后进入REVIEW、再由独立集成窗口审阅”的双窗口模式。认领任务的同一执行窗口负责实现、真实环境验收、修复、合并自己的任务分支、更新公共状态、标记DONE并解锁紧邻后续任务。
+- 影响：任务生命周期改为`BLOCKED → READY → IN_PROGRESS → DONE`（失败时可回到`BLOCKED`）；不再创建单独审阅集成对话。验收标准不降低，执行窗口必须独立读取真实Figma/运行构建或测试，不能只采信自己的完成记录。`AGENTS.md`、`START_HERE.md`、`DEVELOPMENT_WORKFLOW.md`和任务模板已同步。

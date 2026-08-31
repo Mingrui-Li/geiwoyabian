@@ -24,8 +24,9 @@ Do not infer the next task from chat history. Repository status and task cards c
 
 - Serial handoff is the default for this OPC project.
 - Parallel work is allowed only when every involved task card has `parallel_safe: true`, uses a separate branch/worktree, and has non-overlapping `edit_scope` entries.
-- Only the integration window may update `docs/STATUS.md`, unlock dependencies, merge task branches, or move a task from `REVIEW` to `DONE`.
-- Feature windows must not edit public coordination files unless their task explicitly includes them.
+- There is no separate review/integration window. The window executing a task owns implementation, verification, its task-branch integration, public status synchronization, and dependency unlocking through `DONE`.
+- An execution window may update `docs/STATUS.md`, `docs/DECISIONS.md`, its own task card, and the immediately dependent task card as mandatory completion bookkeeping, even when those coordination files are not repeated in the task's `edit_scope`.
+- Do not edit another active task's implementation files or completion record.
 - Never work on a task already marked `IN_PROGRESS` by another window.
 - Preserve all unrelated or user-owned changes. If an overlap cannot be avoided, stop and record the conflict in the task card.
 
@@ -59,12 +60,13 @@ Do not infer the next task from chat history. Repository status and task cards c
 - Do not add leaderboards, guilds, a home/base system, story, or multiplayer; these are permanent product exclusions.
 - Verification should include a Cocos build check and a playable interaction check once the project is initialized.
 
-## Mandatory task handoff
+## Mandatory task completion
 
 Before ending an implementation conversation:
 
 - Run the task's verification steps and `git diff --check`.
 - Fill in the task card's completion record with actual changes, files, verification, risks, and follow-ups.
-- Move the task to `REVIEW`, not `DONE`.
-- Record cross-cutting decisions in `docs/DECISIONS.md` and note which source documents need synchronization.
-- Leave the worktree in a state another window can understand without reading the conversation.
+- Resolve every acceptance item in the same execution window; do not hand the task to a second review window.
+- Move the task directly from `IN_PROGRESS` to `DONE`, unlock the next dependency from `BLOCKED` to `READY`, and update `docs/STATUS.md` only after verification passes.
+- Record cross-cutting decisions in `docs/DECISIONS.md` and synchronize affected source documents.
+- Integrate the task branch into `main` and leave the repository in a state the next execution window can understand without reading the conversation.
