@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "runId": "gwp-014-20260831-01",
-  "taskId": "GWP-014",
-  "branch": "codex/gwp-014-figma-foundations",
+  "runId": "gwp-015-20260831-01",
+  "taskId": "GWP-015",
+  "branch": "codex/gwp-015-base-components",
   "integratedInto": "main",
-  "phase": "phase2-complete",
-  "step": "gwp-014-integrated",
+  "phase": "phase3-complete",
+  "step": "gwp-015-integrated",
   "file": {
     "name": "mini-game",
     "key": "83pqrCcig644vC20QXM5G1",
@@ -45,7 +45,7 @@
       "x": 20050,
       "y": 0,
       "width": 6400,
-      "height": 14000
+      "height": 21600
     },
     "childCount": 10,
     "rightGapFromExistingContent": 400
@@ -76,6 +76,26 @@
       "gwp-014-foundation-opacity-layer.png": "f18f776de0124103ff20e0de726e6854b2d496048d66d642e31ed7489a54d6b7",
       "gwp-014-foundation-effects.png": "a3a379fe65c9ae4baa128be83e954d494a56614efa45f8df9d9083084a97283a",
       "gwp-014-foundation-motion.png": "c6818fb4af57008187998c43bae40fb39ec769b157f24d04ee7e9796919c567f"
+    },
+    "gwp015ComponentsFrameId": "352:389",
+    "gwp015BaseFrameId": "352:390",
+    "gwp015ComponentScreenshots": [
+      "docs/figma/screenshots/gwp-015-a-button.png",
+      "docs/figma/screenshots/gwp-015-a-icon-button.png",
+      "docs/figma/screenshots/gwp-015-a-segmented-control.png",
+      "docs/figma/screenshots/gwp-015-a-status-pill.png",
+      "docs/figma/screenshots/gwp-015-a-progress.png",
+      "docs/figma/screenshots/gwp-015-c-toast-inline-message.png",
+      "docs/figma/screenshots/gwp-015-a-loading.png"
+    ],
+    "gwp015ScreenshotSha256": {
+      "gwp-015-a-button.png": "11875db77fc9035dd25215a734ee0deb97d8dfbe9421d54e0564da21ed1ff6cd",
+      "gwp-015-a-icon-button.png": "ce51d7f56753c75b49370764fd4e9dc0b5819f61543c522ce594264e3cc2ffd0",
+      "gwp-015-a-segmented-control.png": "feab370df9a862143c809af03e59add05f80aa1d9ee3a85d9a7b926bdfa8a26a",
+      "gwp-015-a-status-pill.png": "e293f2bed78bff6f196b37092b3a900cdb72a328c0a47c21adabaa202f577e69",
+      "gwp-015-a-progress.png": "97f133236838e650790d68bac838560c4a7d9c7275b793a9e55ee9bae93ab51d",
+      "gwp-015-c-toast-inline-message.png": "7dc565df00894b9a46f9977c5779b90d9f4b04f9bc15d9995e918e26b912c489",
+      "gwp-015-a-loading.png": "1cb4d8e779a82743abaf1ac0e2a5b639c293687b7c97236f1694e6dec6d2d7d2"
     }
   },
   "discovery": {
@@ -334,13 +354,56 @@
         "348:383", "348:384", "348:385", "348:386", "348:387"
       ]
     },
-    "components": {},
+    "components": {
+      "Button": {
+        "documentationFrameId": "352:416",
+        "componentSetId": "352:516",
+        "variantCount": 24,
+        "validation": "passed after semantic preset and disabled-contrast repair: controlled variants, Auto Layout, token bindings, TEXT/BOOLEAN/INSTANCE_SWAP properties, zero hardcoded paints"
+      },
+      "IconButton": {
+        "documentationFrameId": "352:523",
+        "componentSetId": "352:623",
+        "variantCount": 24,
+        "validation": "passed after role-default icon and disabled-contrast repair: 44/52 touch sizes, Auto Layout, token bindings, BOOLEAN and INSTANCE_SWAP properties, zero hardcoded paints"
+      },
+      "Segment": {
+        "documentationFrameId": "352:733",
+        "componentSetId": "352:866",
+        "variantCount": 21,
+        "validation": "passed after cleanup/retry: valid 2/3-item selections, 360x48 bindings, TEXT properties, zero hardcoded paints and Auto Layout failures"
+      },
+      "StatusPill": {
+        "documentationFrameId": "352:867",
+        "componentSetId": "352:911",
+        "variantCount": 10,
+        "validation": "passed after semantic preset and locked-contrast repair: tone labels/icons preserved, TEXT/BOOLEAN/INSTANCE_SWAP properties, zero hardcoded paints and Auto Layout failures"
+      },
+      "Progress": {
+        "documentationFrameId": "352:934",
+        "componentSetId": "352:978",
+        "variantCount": 12,
+        "validation": "passed: Linear/Stars/Loading states, visible track/fill geometry, TEXT/BOOLEAN properties, zero hardcoded paints and Auto Layout failures"
+      },
+      "Message": {
+        "documentationFrameId": "353:979",
+        "componentSetId": "353:1023",
+        "variantCount": 8,
+        "validation": "passed: Toast/Inline densities, semantic tone copy/icons, TEXT/BOOLEAN/INSTANCE_SWAP properties, zero hardcoded paints and Auto Layout failures"
+      },
+      "Loading": {
+        "documentationFrameId": "353:1036",
+        "componentSetId": "353:1052",
+        "variantCount": 3,
+        "validation": "passed: Startup/Local/Button contexts, semantic labels, TEXT/BOOLEAN properties, zero hardcoded paints and Auto Layout failures"
+      }
+    },
     "screens": {}
   },
   "validations": {
     "anchorMetadata": "passed",
     "topLevelBoundaryReadOnlyCheck": "passed",
-    "sectionMetadata": "passed: unique node 337:139, exact bounds, childCount 10",
+    "sectionMetadata": "passed: unique node 337:139, bounds 20050,0,6400x21600, childCount 10",
     "sectionScreenshot": "passed: docs/figma/screenshots/gwp-013-section-337-139.png",
     "outsideNodeIntegrity": "passed: 8 pre-existing top-level nodes unchanged",
     "gitDiffCheck": "passed on 2026-08-31 for GWP-014",
@@ -351,8 +414,12 @@
     "gwp014FoundationMetadata": "passed: 7 regions with non-overlapping bounds and child counts 21/16/16/20/11/13/11",
     "gwp014Screenshots": "passed: cover, overview, and 7 isolated region exports exist",
     "gwp014VisualQa": "passed after outlining cream/white swatches and applying explicit resolved opacity values to documentation samples",
-    "gwp014KnownLimitations": "TextStyle fields cannot be variable-bound in this path; column-grid custom color is ignored; opacity variable binding did not render in export and must be revalidated for components",
-    "integrationRecheck": "passed on 2026-08-31 using figma-mcp-rust 0.2.0 only: live variable/style/font/frame metadata matched the ledger; 9 current exports matched repository evidence byte-for-byte"
+    "gwp014KnownLimitations": "TextStyle fields cannot be variable-bound in this path; column-grid custom color is ignored. The prior opacity concern was resolved by GWP-015 component binding and visual validation.",
+    "gwp015CapabilityProbe": "passed and deleted: variants, TEXT/BOOLEAN/INSTANCE_SWAP references, token bindings, and pressed opacity VariableID:348:190",
+    "gwp015ComponentAudit": "passed: 7 component sets, 102 controlled variants, 8 internal icon components, zero hardcoded paints and component-root Auto Layout failures",
+    "gwp015VisualQa": "passed: 7 isolated component-set exports; semantic state presets and Disabled/Locked contrast repaired before freeze",
+    "gwp015OutsideNodeIntegrity": "passed: final Section scan retained the 8 pre-existing IDs and bounds plus GWP Section 337:139",
+    "integrationRecheck": "passed on 2026-09-01: companion TypeScript check and Vite build, artifact hash comparison, STATE JSON parse, 7 screenshot existence checks, final Figma node/Section scans, and git diff check"
   },
   "completedSteps": [
     "P0.a",
@@ -374,11 +441,15 @@
     "P1.h",
     "P2.a",
     "P2.b",
-    "P2.c"
+    "P2.c",
+    "GWP-015-capability-probe",
+    "GWP-015-seven-component-sets",
+    "GWP-015-visual-qa",
+    "GWP-015-final-node-scan"
   ],
   "pending": [
-    "GWP-015 execution window: revalidate opacity variable binding before relying on it in components, then complete implementation, verification, main integration and status updates in the same window",
+    "GWP-016 is READY after GWP-015 main integration",
     "Optional audit: use remote component search only if a future figma-mcp-rust version exposes it; official Figma MCP is prohibited and v1 has no remote-library dependency"
   ],
-  "lastUpdated": "2026-08-31"
+  "lastUpdated": "2026-09-01"
 }

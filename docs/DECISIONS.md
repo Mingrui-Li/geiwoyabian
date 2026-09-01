@@ -113,3 +113,10 @@
 - 状态：ACCEPTED
 - 决策：从GWP-015开始取消“执行窗口完成后进入REVIEW、再由独立集成窗口审阅”的双窗口模式。认领任务的同一执行窗口负责实现、真实环境验收、修复、合并自己的任务分支、更新公共状态、标记DONE并解锁紧邻后续任务。
 - 影响：任务生命周期改为`BLOCKED → READY → IN_PROGRESS → DONE`（失败时可回到`BLOCKED`）；不再创建单独审阅集成对话。验收标准不降低，执行窗口必须独立读取真实Figma/运行构建或测试，不能只采信自己的完成记录。`AGENTS.md`、`START_HERE.md`、`DEVELOPMENT_WORKFLOW.md`和任务模板已同步。
+
+## D-017：Figma基础交互组件与语义预设基线
+
+- 日期：2026-09-01
+- 状态：ACCEPTED
+- 决策：v1基础交互层固定为Button、IconButton、SegmentedControl、StatusPill、Progress、Toast/InlineMessage与Loading七个Component Set，共102个受控Variant，并以8个内部图标Component提供实例复用。TEXT、BOOLEAN和INSTANCE_SWAP只暴露可安全定制的节点；Danger、Loading、Error、Offline、Locked、Completed等状态保留语义文案和图标预设，不允许公共默认值覆盖。Disabled与Locked使用`surface`容器配合Foundation opacity token，保持状态弱化与文字可读同时成立。
+- 影响：GWP-016及后续Figma任务必须优先组合这些精确组件ID，不复制近似Frame或重新建立基础状态矩阵。仓库伴生插件已扩展组件创建、属性连接、语义预设与审计能力，后续仍须运行`docs/figma/tooling/figma-mcp-rust-gwp014/`中的唯一命名开发插件。

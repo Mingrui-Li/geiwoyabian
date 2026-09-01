@@ -50,11 +50,11 @@ var __async = (__this, __arguments, generator) => {
     }
     return pending;
   };
-  const pixelRound = (v) => Math.round(v * 100) / 100;
+  const pixelRound = (v2) => Math.round(v2 * 100) / 100;
   const toHex = (color) => {
-    const clamp = (v) => Math.min(255, Math.max(0, Math.round(v * 255)));
+    const clamp = (v2) => Math.min(255, Math.max(0, Math.round(v2 * 255)));
     const [r, g, b] = [clamp(color.r), clamp(color.g), clamp(color.b)];
-    return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+    return `#${[r, g, b].map((v2) => v2.toString(16).padStart(2, "0")).join("")}`;
   };
   const serializePaints = (paints) => {
     if (isMixed(paints)) return "mixed";
@@ -746,7 +746,7 @@ var __async = (__this, __arguments, generator) => {
                 modeId: mode.modeId,
                 name: mode.name
               })),
-              variables: variables.filter((v) => v !== null).map((variable) => ({
+              variables: variables.filter((v2) => v2 !== null).map((variable) => ({
                 id: variable.id,
                 name: variable.name,
                 resolvedType: variable.resolvedType,
@@ -2248,8 +2248,913 @@ var __async = (__this, __arguments, generator) => {
         return null;
     }
   });
+  const parseEnvelope = (value) => {
+    if (typeof value !== "string" || !value.startsWith("{")) return null;
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && parsed.$gwpComponent === 1 ? parsed : null;
+    } catch (e) {
+      return null;
+    }
+  };
+  const requireNode = (id) => __async(null, null, function* () {
+    const node = yield figma.getNodeByIdAsync(id);
+    if (!node) throw new Error(`Node not found: ${id}`);
+    return node;
+  });
+  const loadGwpResources = () => __async(null, null, function* () {
+    const [collections, variables, textStyles, effectStyles] = yield Promise.all([
+      figma.variables.getLocalVariableCollectionsAsync(),
+      figma.variables.getLocalVariablesAsync(),
+      figma.getLocalTextStylesAsync(),
+      figma.getLocalEffectStylesAsync()
+    ]);
+    const collectionNames = new Map(collections.map((c) => [c.id, c.name]));
+    const vars = /* @__PURE__ */ new Map();
+    for (const variable of variables) {
+      const collectionName = collectionNames.get(variable.variableCollectionId);
+      if (collectionName == null ? void 0 : collectionName.startsWith("GWP /")) {
+        vars.set(`${collectionName}/${variable.name}`, variable);
+      }
+    }
+    const text = new Map(textStyles.filter((s) => s.name.startsWith("GWP/")).map((s) => [s.name, s]));
+    const effects = new Map(effectStyles.filter((s) => s.name.startsWith("GWP/")).map((s) => [s.name, s]));
+    const requiredVars = [
+      "GWP / Color Primitives/white/0",
+      "GWP / Color Semantics/brand",
+      "GWP / Color Semantics/accent",
+      "GWP / Color Semantics/success",
+      "GWP / Color Semantics/warning",
+      "GWP / Color Semantics/danger",
+      "GWP / Color Semantics/surface",
+      "GWP / Color Semantics/text/primary",
+      "GWP / Color Semantics/text/secondary",
+      "GWP / Color Semantics/disabled",
+      "GWP / Layout/spacing/4",
+      "GWP / Layout/spacing/8",
+      "GWP / Layout/spacing/12",
+      "GWP / Layout/spacing/16",
+      "GWP / Layout/spacing/24",
+      "GWP / Layout/radius/12",
+      "GWP / Layout/radius/20",
+      "GWP / Layout/radius/pill",
+      "GWP / Layout/stroke/sticker-white",
+      "GWP / Layout/stroke/control",
+      "GWP / Layout/size/touch-min",
+      "GWP / Layout/size/action-min",
+      "GWP / Layout/size/button-primary",
+      "GWP / Layout/size/canvas-min-width",
+      "GWP / Layout/size/canvas-base-width",
+      "GWP / Opacity/disabled",
+      "GWP / Opacity/secondary",
+      "GWP / Opacity/pressed",
+      "GWP / Typography/family/body",
+      "GWP / Typography/style/regular",
+      "GWP / Typography/style/strong",
+      "GWP / Typography/size/body",
+      "GWP / Typography/size/caption",
+      "GWP / Typography/size/micro",
+      "GWP / Typography/line-height/body",
+      "GWP / Typography/line-height/caption",
+      "GWP / Typography/line-height/micro",
+      "GWP / Typography/letter-spacing/body",
+      "GWP / Typography/letter-spacing/caption",
+      "GWP / Typography/letter-spacing/micro"
+    ];
+    const missing = requiredVars.filter((name) => !vars.has(name));
+    if (missing.length) throw new Error(`Missing GWP variables: ${missing.join(", ")}`);
+    yield Promise.all([
+      figma.loadFontAsync({ family: "Noto Sans SC", style: "Regular" }),
+      figma.loadFontAsync({ family: "Noto Sans SC", style: "Bold" })
+    ]);
+    return { vars, text, effects };
+  });
+  const v = (resources, name) => {
+    const variable = resources.vars.get(name);
+    if (!variable) throw new Error(`Variable not found: ${name}`);
+    return variable;
+  };
+  const bindPaint = (variable) => figma.variables.setBoundVariableForPaint(
+    { type: "SOLID", color: { r: 0, g: 0, b: 0 } },
+    "color",
+    variable
+  );
+  const bind = (node, field, variable) => node.setBoundVariable(field, variable);
+  const configureAutoLayout = (node, direction) => {
+    node.layoutMode = direction;
+    node.primaryAxisAlignItems = "CENTER";
+    node.counterAxisAlignItems = "CENTER";
+  };
+  const applyContainerTokens = (node, resources, fillVariable, state, radius = "GWP / Layout/radius/20") => __async(null, null, function* () {
+    node.fills = [bindPaint(fillVariable)];
+    node.strokes = [bindPaint(v(resources, "GWP / Color Primitives/white/0"))];
+    bind(node, "strokeWeight", v(resources, "GWP / Layout/stroke/sticker-white"));
+    for (const field of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) {
+      bind(node, field, v(resources, radius));
+    }
+    const effectName = state === "Pressed" ? "GWP/Effect/Sticker/Pressed" : "GWP/Effect/Sticker/Default";
+    const effect = resources.effects.get(effectName);
+    if (!effect) throw new Error(`Effect style not found: ${effectName}`);
+    yield node.setEffectStyleIdAsync(effect.id);
+    if (state === "Pressed") bind(node, "opacity", v(resources, "GWP / Opacity/pressed"));
+    if (state === "Disabled") bind(node, "opacity", v(resources, "GWP / Opacity/disabled"));
+  });
+  const applySpacing = (node, resources, horizontal = "GWP / Layout/spacing/16", vertical = "GWP / Layout/spacing/12", gap = "GWP / Layout/spacing/8") => {
+    bind(node, "paddingLeft", v(resources, horizontal));
+    bind(node, "paddingRight", v(resources, horizontal));
+    bind(node, "paddingTop", v(resources, vertical));
+    bind(node, "paddingBottom", v(resources, vertical));
+    bind(node, "itemSpacing", v(resources, gap));
+  };
+  const makeText = (_0, _1, _2, ..._3) => __async(null, [_0, _1, _2, ..._3], function* (name, characters, resources, options = {}) {
+    var _a, _b, _c;
+    const strong = (_a = options.strong) != null ? _a : false;
+    const scale = (_b = options.scale) != null ? _b : "body";
+    const text = figma.createText();
+    text.name = name;
+    text.fontName = { family: "Noto Sans SC", style: strong ? "Bold" : "Regular" };
+    text.fontSize = scale === "body" ? 16 : scale === "caption" ? 14 : 12;
+    text.characters = characters;
+    text.fills = [bindPaint((_c = options.color) != null ? _c : v(resources, "GWP / Color Semantics/text/primary"))];
+    bind(text, "fontFamily", v(resources, "GWP / Typography/family/body"));
+    bind(text, "fontStyle", v(resources, strong ? "GWP / Typography/style/strong" : "GWP / Typography/style/regular"));
+    bind(text, "fontSize", v(resources, `GWP / Typography/size/${scale}`));
+    bind(text, "lineHeight", v(resources, `GWP / Typography/line-height/${scale}`));
+    bind(text, "letterSpacing", v(resources, `GWP / Typography/letter-spacing/${scale}`));
+    return text;
+  });
+  const createIconComponents = (base, resources) => __async(null, null, function* () {
+    const existing = base.findAll((n) => n.type === "COMPONENT" && n.name.startsWith("GWP/Icon/"));
+    if (existing.length >= 8) return existing;
+    const glyphs = [
+      ["Default", "●"],
+      ["Back", "←"],
+      ["Close", "×"],
+      ["Check", "✓"],
+      ["Warning", "!"],
+      ["Offline", "⌁"],
+      ["Lock", "◆"],
+      ["Spinner", "◌"]
+    ];
+    const icons = [];
+    for (let index = 0; index < glyphs.length; index++) {
+      const [name, glyph] = glyphs[index];
+      const icon = figma.createComponent();
+      icon.name = `GWP/Icon/${name}`;
+      icon.resize(24, 24);
+      configureAutoLayout(icon, "HORIZONTAL");
+      icon.primaryAxisSizingMode = "FIXED";
+      icon.counterAxisSizingMode = "FIXED";
+      icon.fills = [];
+      const text = yield makeText("Icon/Glyph", glyph, resources, { strong: true, scale: "body" });
+      icon.appendChild(text);
+      base.appendChild(icon);
+      icon.x = 100 + index * 52;
+      icon.y = 120;
+      icons.push(icon);
+    }
+    return icons;
+  });
+  const iconByName = (base, name) => {
+    const icon = base.findOne((n) => n.type === "COMPONENT" && n.name === `GWP/Icon/${name}`);
+    if (!icon || icon.type !== "COMPONENT") throw new Error(`Icon component missing: ${name}`);
+    return icon;
+  };
+  const appendIcon = (parent, base, name, layerName = "Icon") => {
+    const instance = iconByName(base, name).createInstance();
+    instance.name = layerName;
+    parent.appendChild(instance);
+    return instance;
+  };
+  const roleFill = (resources, role) => {
+    if (["Primary", "Emphasis"].includes(role)) return v(resources, "GWP / Color Semantics/brand");
+    if (["Danger", "Error"].includes(role)) return v(resources, "GWP / Color Semantics/danger");
+    if (["Success", "Completed"].includes(role)) return v(resources, "GWP / Color Semantics/success");
+    if (["Warning", "Offline"].includes(role)) return v(resources, "GWP / Color Semantics/warning");
+    if (role === "Locked") return v(resources, "GWP / Color Semantics/surface");
+    if (role === "Info") return v(resources, "GWP / Color Semantics/accent");
+    return v(resources, "GWP / Color Semantics/surface");
+  };
+  const createButtonVariants = (base, resources) => __async(null, null, function* () {
+    const records = [];
+    for (const role of ["Primary", "Secondary", "Danger"]) {
+      for (const size of ["M", "L"]) {
+        for (const state of ["Default", "Pressed", "Disabled", "Loading"]) {
+          const component = figma.createComponent();
+          component.name = `Role=${role}, Size=${size}, State=${state}`;
+          component.resize(120, size === "L" ? 52 : 48);
+          configureAutoLayout(component, "HORIZONTAL");
+          component.primaryAxisSizingMode = "AUTO";
+          component.counterAxisSizingMode = "FIXED";
+          bind(component, "height", v(resources, size === "L" ? "GWP / Layout/size/button-primary" : "GWP / Layout/size/action-min"));
+          applySpacing(component, resources, size === "L" ? "GWP / Layout/spacing/24" : "GWP / Layout/spacing/16", "GWP / Layout/spacing/8");
+          yield applyContainerTokens(component, resources, state === "Disabled" ? roleFill(resources, "Locked") : roleFill(resources, role), state, "GWP / Layout/radius/pill");
+          const icon = appendIcon(component, base, state === "Loading" ? "Spinner" : "Default", "Leading Icon");
+          const label = yield makeText("Label", state === "Loading" ? "加载中…" : role === "Danger" ? "确认删除" : "开始压扁", resources, { strong: true });
+          component.appendChild(label);
+          records.push({ component, labels: { Label: label }, icon });
+        }
+      }
+    }
+    return records;
+  });
+  const createIconButtonVariants = (base, resources) => __async(null, null, function* () {
+    const records = [];
+    for (const role of ["Neutral", "Emphasis", "Back", "Close"]) {
+      for (const size of ["44", "52"]) {
+        for (const state of ["Default", "Pressed", "Disabled"]) {
+          const component = figma.createComponent();
+          component.name = `Role=${role}, Size=${size}, State=${state}`;
+          const dimension = size === "52" ? 52 : 44;
+          component.resize(dimension, dimension);
+          configureAutoLayout(component, "HORIZONTAL");
+          component.primaryAxisSizingMode = "FIXED";
+          component.counterAxisSizingMode = "FIXED";
+          const sizeVar = v(resources, size === "52" ? "GWP / Layout/size/button-primary" : "GWP / Layout/size/touch-min");
+          bind(component, "width", sizeVar);
+          bind(component, "height", sizeVar);
+          yield applyContainerTokens(component, resources, state === "Disabled" ? roleFill(resources, "Locked") : roleFill(resources, role), state, "GWP / Layout/radius/pill");
+          const iconName = role === "Back" ? "Back" : role === "Close" ? "Close" : "Default";
+          const icon = appendIcon(component, base, iconName, "Icon");
+          const badge = figma.createEllipse();
+          badge.name = "Badge Dot";
+          badge.resize(8, 8);
+          badge.fills = [bindPaint(v(resources, "GWP / Color Semantics/danger"))];
+          badge.visible = false;
+          component.appendChild(badge);
+          records.push({ component, icon, booleanNode: badge });
+        }
+      }
+    }
+    return records;
+  });
+  const createSegmentVariants = (_base, resources) => __async(null, null, function* () {
+    const records = [];
+    for (const items of [2, 3]) {
+      const selections = items === 2 ? ["None", "1", "2"] : ["None", "1", "2", "3"];
+      for (const selected of selections) {
+        for (const state of ["Default", "Pressed", "Disabled"]) {
+          const component = figma.createComponent();
+          component.name = `Items=${items}, Selected=${selected}, State=${state}`;
+          component.resize(360, 48);
+          configureAutoLayout(component, "HORIZONTAL");
+          component.primaryAxisSizingMode = "FIXED";
+          component.counterAxisSizingMode = "FIXED";
+          bind(component, "width", v(resources, "GWP / Layout/size/canvas-base-width"));
+          bind(component, "height", v(resources, "GWP / Layout/size/action-min"));
+          bind(component, "itemSpacing", v(resources, "GWP / Layout/spacing/4"));
+          yield applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/surface"), state, "GWP / Layout/radius/pill");
+          const labels = {};
+          for (let index = 1; index <= items; index++) {
+            const segment = figma.createFrame();
+            segment.name = `Segment ${index}`;
+            segment.resize(100, 40);
+            configureAutoLayout(segment, "HORIZONTAL");
+            segment.primaryAxisSizingMode = "FIXED";
+            segment.counterAxisSizingMode = "FIXED";
+            segment.fills = [bindPaint(String(index) === selected ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"))];
+            for (const field of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) bind(segment, field, v(resources, "GWP / Layout/radius/pill"));
+            const label = yield makeText(`Item ${index}`, index === 1 ? "全部" : index === 2 ? "已发现" : "已完成", resources, { strong: String(index) === selected });
+            segment.appendChild(label);
+            component.appendChild(segment);
+            segment.layoutGrow = 1;
+            segment.layoutAlign = "STRETCH";
+            labels[`Item ${index}`] = label;
+          }
+          records.push({ component, labels });
+        }
+      }
+    }
+    return records;
+  });
+  const createStatusPillVariants = (base, resources) => __async(null, null, function* () {
+    const records = [];
+    for (const tone of ["Info", "Success", "Warning", "Locked", "Completed"]) {
+      for (const emphasis of ["Default", "Emphasized"]) {
+        const component = figma.createComponent();
+        component.name = `Tone=${tone}, Emphasis=${emphasis}`;
+        component.resize(96, 36);
+        configureAutoLayout(component, "HORIZONTAL");
+        component.primaryAxisSizingMode = "AUTO";
+        component.counterAxisSizingMode = "AUTO";
+        applySpacing(component, resources, "GWP / Layout/spacing/12", "GWP / Layout/spacing/4", "GWP / Layout/spacing/4");
+        yield applyContainerTokens(component, resources, roleFill(resources, tone), "Default", "GWP / Layout/radius/pill");
+        if (emphasis === "Default") bind(component, "opacity", v(resources, "GWP / Opacity/secondary"));
+        const iconName = tone === "Locked" ? "Lock" : tone === "Warning" ? "Warning" : tone === "Info" ? "Default" : "Check";
+        const icon = appendIcon(component, base, iconName, "Status Icon");
+        const label = yield makeText("Label", tone === "Info" ? "新内容" : tone === "Success" ? "成功" : tone === "Warning" ? "注意" : tone === "Locked" ? "未解锁" : "已完成", resources, { strong: emphasis === "Emphasized", scale: "caption" });
+        component.appendChild(label);
+        records.push({ component, labels: { Label: label }, icon });
+      }
+    }
+    return records;
+  });
+  const createProgressVariants = (base, resources) => __async(null, null, function* () {
+    const records = [];
+    for (const kind of ["Linear", "Stars", "Loading"]) {
+      for (const state of ["Default", "Loading", "Completed", "Error"]) {
+        const component = figma.createComponent();
+        component.name = `Kind=${kind}, State=${state}`;
+        component.resize(320, 48);
+        configureAutoLayout(component, "HORIZONTAL");
+        component.primaryAxisSizingMode = "FIXED";
+        component.counterAxisSizingMode = "FIXED";
+        bind(component, "width", v(resources, "GWP / Layout/size/canvas-min-width"));
+        bind(component, "height", v(resources, "GWP / Layout/size/action-min"));
+        applySpacing(component, resources, "GWP / Layout/spacing/12", "GWP / Layout/spacing/8", "GWP / Layout/spacing/8");
+        yield applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/12");
+        let label;
+        if (kind === "Linear") {
+          const track = figma.createFrame();
+          track.name = "Progress Track";
+          track.resize(210, 12);
+          track.fills = [bindPaint(v(resources, "GWP / Color Semantics/disabled"))];
+          bind(track, "opacity", v(resources, "GWP / Opacity/secondary"));
+          for (const field of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) bind(track, field, v(resources, "GWP / Layout/radius/pill"));
+          const fill = figma.createRectangle();
+          fill.name = "Progress Fill";
+          fill.resize(state === "Completed" ? 210 : state === "Error" ? 170 : state === "Loading" ? 120 : 105, 12);
+          fill.fills = [bindPaint(state === "Error" ? v(resources, "GWP / Color Semantics/danger") : v(resources, "GWP / Color Semantics/brand"))];
+          bind(fill, "cornerRadius", v(resources, "GWP / Layout/radius/pill"));
+          track.appendChild(fill);
+          component.appendChild(track);
+          track.layoutGrow = 1;
+          label = yield makeText("Label", state === "Completed" ? "完成" : state === "Error" ? "重试" : "50%", resources, { strong: true, scale: "caption" });
+          component.appendChild(label);
+        } else if (kind === "Stars") {
+          label = yield makeText("Label", state === "Completed" ? "★★★" : state === "Error" ? "☆☆☆" : state === "Loading" ? "★☆☆" : "★★☆", resources, { strong: true });
+          component.appendChild(label);
+        } else {
+          appendIcon(component, base, "Spinner", "Loading Icon");
+          label = yield makeText("Label", state === "Error" ? "加载失败" : state === "Completed" ? "加载完成" : "加载中…", resources, { strong: true, scale: "caption" });
+          component.appendChild(label);
+        }
+        records.push({ component, labels: { Label: label } });
+      }
+    }
+    return records;
+  });
+  const createMessageVariants = (base, resources) => __async(null, null, function* () {
+    const records = [];
+    for (const kind of ["Toast", "Inline"]) {
+      for (const tone of ["Info", "Success", "Error", "Offline"]) {
+        const component = figma.createComponent();
+        component.name = `Kind=${kind}, Tone=${tone}`;
+        component.resize(320, kind === "Toast" ? 52 : 72);
+        configureAutoLayout(component, "HORIZONTAL");
+        component.primaryAxisSizingMode = "FIXED";
+        component.counterAxisSizingMode = "AUTO";
+        bind(component, "width", v(resources, "GWP / Layout/size/canvas-min-width"));
+        applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+        yield applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+        const toneBar = figma.createRectangle();
+        toneBar.name = "Tone Bar";
+        toneBar.resize(4, kind === "Toast" ? 28 : 44);
+        toneBar.fills = [bindPaint(roleFill(resources, tone))];
+        bind(toneBar, "width", v(resources, "GWP / Layout/spacing/4"));
+        bind(toneBar, "cornerRadius", v(resources, "GWP / Layout/radius/pill"));
+        component.appendChild(toneBar);
+        const iconName = tone === "Success" ? "Check" : tone === "Error" ? "Warning" : tone === "Offline" ? "Offline" : "Default";
+        const icon = appendIcon(component, base, iconName, "Message Icon");
+        const message = yield makeText("Message", tone === "Info" ? "设置已保存" : tone === "Success" ? "领取成功" : tone === "Error" ? "操作失败，请重试" : "网络不可用，已保留本地进度", resources, { strong: kind === "Toast", scale: kind === "Toast" ? "caption" : "body" });
+        component.appendChild(message);
+        message.layoutGrow = 1;
+        records.push({ component, labels: { Message: message }, icon });
+      }
+    }
+    return records;
+  });
+  const createLoadingVariants = (base, resources) => __async(null, null, function* () {
+    const records = [];
+    for (const context of ["Startup", "Local", "Button"]) {
+      const component = figma.createComponent();
+      component.name = `Context=${context}`;
+      component.resize(context === "Startup" ? 320 : 120, context === "Startup" ? 96 : 48);
+      configureAutoLayout(component, context === "Startup" ? "VERTICAL" : "HORIZONTAL");
+      component.primaryAxisSizingMode = context === "Startup" ? "FIXED" : "AUTO";
+      component.counterAxisSizingMode = context === "Startup" ? "FIXED" : "AUTO";
+      if (context === "Startup") bind(component, "width", v(resources, "GWP / Layout/size/canvas-min-width"));
+      applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+      yield applyContainerTokens(component, resources, context === "Button" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+      appendIcon(component, base, "Spinner", "Spinner");
+      const label = yield makeText("Label", context === "Startup" ? "正在启动压扁工坊…" : context === "Local" ? "加载中…" : "处理中…", resources, { strong: true, scale: "caption" });
+      component.appendChild(label);
+      records.push({ component, labels: { Label: label } });
+    }
+    return records;
+  });
+  const familyConfig = {
+    Button: { setName: "GWP/A-Button", title: "Button", description: "主、次与危险文本按钮，覆盖 M/L 与 Default、Pressed、Disabled、Loading。", usage: "用于明确动作；禁止同一页面出现多个 Primary，也禁止用图片烘焙文字。", columns: 4, creator: createButtonVariants },
+    IconButton: { setName: "GWP/A-IconButton", title: "IconButton", description: "44/52 触控热区的普通、强调、返回与关闭按钮。", usage: "Icon 使用 INSTANCE_SWAP；禁止为每个图标建立 variant。", columns: 3, creator: createIconButtonVariants },
+    Segment: { setName: "GWP/A-SegmentedControl", title: "Tab / Segment", description: "2/3 项文字分页，显式建模当前项与 Default、Pressed、Disabled。", usage: "用于同层内容切换；禁止承载页面主导航或超过 3 项。", columns: 3, creator: createSegmentVariants },
+    StatusPill: { setName: "GWP/A-StatusPill", title: "Badge / StatusPill", description: "Info、Success、Warning、Locked、Completed 状态胶囊。", usage: "用于短状态；禁止塞入长句或替代按钮。", columns: 2, creator: createStatusPillVariants },
+    Progress: { setName: "GWP/A-Progress", title: "Progress", description: "Linear、Stars、Loading 三类进度与 Default、Loading、Completed、Error。", usage: "只表达进度或结果；禁止以动效制造虚假进度。", columns: 4, creator: createProgressVariants },
+    Message: { setName: "GWP/C-Toast-InlineMessage", title: "Toast / InlineMessage", description: "Toast 与 Inline 两种密度，覆盖 Info、Success、Error、Offline。", usage: "Toast 短暂反馈，Inline 保留上下文；禁止用 Toast 承载必须确认的信息。", columns: 4, creator: createMessageVariants },
+    Loading: { setName: "GWP/A-Loading", title: "Loading", description: "Startup、Local、Button 三种加载上下文。", usage: "用于真实等待；禁止无结束条件的装饰性旋转。", columns: 3, creator: createLoadingVariants }
+  };
+  const addDocumentation = (frame, config, resources) => __async(null, null, function* () {
+    const title = yield makeText(`${config.title}/Title`, config.title, resources, { strong: true });
+    title.x = 100;
+    title.y = 60;
+    frame.appendChild(title);
+    const description = yield makeText(`${config.title}/Description`, config.description, resources, { scale: "caption" });
+    description.x = 100;
+    description.y = 110;
+    frame.appendChild(description);
+    const usage = yield makeText(`${config.title}/Usage`, `用法：${config.usage}`, resources, { scale: "micro" });
+    usage.x = 100;
+    usage.y = 155;
+    frame.appendChild(usage);
+    return [title.id, description.id, usage.id];
+  });
+  const wireProperties = (set, records, family, base) => {
+    const propertyKeys = {};
+    const addTextProperty = (property, fallback) => {
+      var _a, _b;
+      const key = set.addComponentProperty(property, "TEXT", fallback);
+      propertyKeys[property] = key;
+      for (const record of records) {
+        const node = (_a = record.labels) == null ? void 0 : _a[property];
+        if (node) node.componentPropertyReferences = __spreadProps(__spreadValues({}, (_b = node.componentPropertyReferences) != null ? _b : {}), { characters: key });
+      }
+    };
+    const addBooleanProperty = (property, defaultValue, selector) => {
+      var _a;
+      const key = set.addComponentProperty(property, "BOOLEAN", defaultValue);
+      propertyKeys[property] = key;
+      for (const record of records) {
+        const node = selector(record);
+        if (node) node.componentPropertyReferences = __spreadProps(__spreadValues({}, (_a = node.componentPropertyReferences) != null ? _a : {}), { visible: key });
+      }
+    };
+    const addIconProperty = (property, fallback) => {
+      var _a;
+      const defaultIcon = iconByName(base, fallback);
+      const key = set.addComponentProperty(property, "INSTANCE_SWAP", defaultIcon.id);
+      propertyKeys[property] = key;
+      for (const record of records) {
+        if (record.icon) record.icon.componentPropertyReferences = __spreadProps(__spreadValues({}, (_a = record.icon.componentPropertyReferences) != null ? _a : {}), { mainComponent: key });
+      }
+    };
+    if (family === "Button") {
+      addTextProperty("Label", "开始压扁");
+      addBooleanProperty("Show Leading Icon", false, (r) => r.icon);
+      addIconProperty("Leading Icon", "Default");
+      for (const record of records) if (record.icon) record.icon.visible = false;
+    } else if (family === "IconButton") {
+      addBooleanProperty("Show Badge", false, (r) => r.booleanNode);
+      addIconProperty("Icon", "Default");
+    } else if (family === "Segment") {
+      addTextProperty("Item 1", "全部");
+      addTextProperty("Item 2", "已发现");
+      addTextProperty("Item 3", "已完成");
+    } else if (family === "StatusPill") {
+      addTextProperty("Label", "状态");
+      addBooleanProperty("Show Icon", true, (r) => r.icon);
+      addIconProperty("Icon", "Default");
+    } else if (family === "Progress") {
+      addTextProperty("Label", "50%");
+      addBooleanProperty("Show Label", true, (r) => {
+        var _a;
+        return (_a = r.labels) == null ? void 0 : _a.Label;
+      });
+    } else if (family === "Message") {
+      addTextProperty("Message", "设置已保存");
+      addBooleanProperty("Show Icon", true, (r) => r.icon);
+      addIconProperty("Icon", "Default");
+    } else if (family === "Loading") {
+      addTextProperty("Label", "加载中…");
+      addBooleanProperty("Show Label", true, (r) => {
+        var _a;
+        return (_a = r.labels) == null ? void 0 : _a.Label;
+      });
+    }
+    return propertyKeys;
+  };
+  const removePropertyReference = (node, field) => {
+    var _a;
+    if (!("componentPropertyReferences" in node)) return;
+    const refs = __spreadValues({}, (_a = node.componentPropertyReferences) != null ? _a : {});
+    delete refs[field];
+    node.componentPropertyReferences = refs;
+  };
+  const setTextCharacters = (node, characters) => __async(null, null, function* () {
+    if (node.fontName === figma.mixed) throw new Error(`Mixed font in semantic preset: ${node.id}`);
+    yield figma.loadFontAsync(node.fontName);
+    node.characters = characters;
+  });
+  const applyFamilyPresets = (set, records, family, base, resources, propertyKeys) => __async(null, null, function* () {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
+    const mutatedNodeIds = [];
+    const defaultIcon = iconByName(base, "Default");
+    const editDefault = (key, value) => {
+      if (key) set.editComponentProperty(key, { defaultValue: value });
+    };
+    if (family === "Button") editDefault(propertyKeys.Label, "开始压扁");
+    if (family === "StatusPill") editDefault(propertyKeys.Label, "新内容");
+    if (family === "Progress") editDefault(propertyKeys.Label, "50%");
+    if (family === "Message") editDefault(propertyKeys.Message, "设置已保存");
+    if (family === "Loading") editDefault(propertyKeys.Label, "加载中…");
+    if (propertyKeys.Icon) editDefault(propertyKeys.Icon, defaultIcon.id);
+    if (propertyKeys["Leading Icon"]) editDefault(propertyKeys["Leading Icon"], defaultIcon.id);
+    for (const record of records) {
+      const name = record.component.name;
+      if (family === "IconButton" && record.icon) {
+        const role = (_b = (_a = /Role=([^,]+)/.exec(name)) == null ? void 0 : _a[1]) != null ? _b : "Neutral";
+        if (role === "Back" || role === "Close") {
+          removePropertyReference(record.icon, "mainComponent");
+          record.icon.swapComponent(iconByName(base, role));
+        } else {
+          record.icon.swapComponent(defaultIcon);
+          record.icon.componentPropertyReferences = __spreadProps(__spreadValues({}, (_c = record.icon.componentPropertyReferences) != null ? _c : {}), {
+            mainComponent: propertyKeys.Icon
+          });
+        }
+        record.icon.name = "Icon";
+        mutatedNodeIds.push(record.icon.id);
+      }
+      if (family === "Button") {
+        const role = (_e = (_d = /Role=([^,]+)/.exec(name)) == null ? void 0 : _d[1]) != null ? _e : "Primary";
+        const state = (_g = (_f = /State=([^,]+)/.exec(name)) == null ? void 0 : _f[1]) != null ? _g : "Default";
+        const label = (_h = record.labels) == null ? void 0 : _h.Label;
+        if (state === "Disabled") {
+          record.component.fills = [bindPaint(v(resources, "GWP / Color Semantics/surface"))];
+          mutatedNodeIds.push(record.component.id);
+        }
+        if (label && (role === "Danger" || state === "Loading")) {
+          removePropertyReference(label, "characters");
+          yield setTextCharacters(label, state === "Loading" ? "加载中…" : "确认删除");
+          mutatedNodeIds.push(label.id);
+        }
+        if (record.icon && state === "Loading") {
+          removePropertyReference(record.icon, "visible");
+          removePropertyReference(record.icon, "mainComponent");
+          record.icon.swapComponent(iconByName(base, "Spinner"));
+          record.icon.visible = true;
+          mutatedNodeIds.push(record.icon.id);
+        }
+      }
+      if (family === "StatusPill") {
+        const tone = (_j = (_i = /Tone=([^,]+)/.exec(name)) == null ? void 0 : _i[1]) != null ? _j : "Info";
+        const label = (_k = record.labels) == null ? void 0 : _k.Label;
+        if (tone === "Locked") {
+          record.component.fills = [bindPaint(v(resources, "GWP / Color Semantics/surface"))];
+          mutatedNodeIds.push(record.component.id);
+        }
+        if (tone !== "Info" && label) {
+          removePropertyReference(label, "characters");
+          const copy = tone === "Success" ? "成功" : tone === "Warning" ? "注意" : tone === "Locked" ? "未解锁" : "已完成";
+          yield setTextCharacters(label, copy);
+          mutatedNodeIds.push(label.id);
+        }
+        if (record.icon && tone !== "Info") {
+          removePropertyReference(record.icon, "mainComponent");
+          const iconName = tone === "Warning" ? "Warning" : tone === "Locked" ? "Lock" : "Check";
+          record.icon.swapComponent(iconByName(base, iconName));
+          mutatedNodeIds.push(record.icon.id);
+        }
+      }
+      if (family === "Progress") {
+        const kind = (_m = (_l = /Kind=([^,]+)/.exec(name)) == null ? void 0 : _l[1]) != null ? _m : "Linear";
+        const state = (_o = (_n = /State=([^,]+)/.exec(name)) == null ? void 0 : _n[1]) != null ? _o : "Default";
+        const label = (_p = record.labels) == null ? void 0 : _p.Label;
+        const customizable = kind === "Linear" && (state === "Default" || state === "Loading");
+        if (label && !customizable) {
+          removePropertyReference(label, "characters");
+          const copy = kind === "Linear" ? state === "Completed" ? "完成" : "重试" : kind === "Stars" ? state === "Completed" ? "★★★" : state === "Error" ? "☆☆☆" : state === "Loading" ? "★☆☆" : "★★☆" : state === "Error" ? "加载失败" : state === "Completed" ? "加载完成" : "加载中…";
+          yield setTextCharacters(label, copy);
+          mutatedNodeIds.push(label.id);
+        }
+      }
+      if (family === "Message") {
+        const tone = (_r = (_q = /Tone=([^,]+)/.exec(name)) == null ? void 0 : _q[1]) != null ? _r : "Info";
+        const message = (_s = record.labels) == null ? void 0 : _s.Message;
+        if (tone !== "Info" && message) {
+          removePropertyReference(message, "characters");
+          const copy = tone === "Success" ? "领取成功" : tone === "Error" ? "操作失败，请重试" : "网络不可用，已保留本地进度";
+          yield setTextCharacters(message, copy);
+          mutatedNodeIds.push(message.id);
+        }
+        if (record.icon && tone !== "Info") {
+          removePropertyReference(record.icon, "mainComponent");
+          record.icon.swapComponent(iconByName(base, tone === "Success" ? "Check" : tone === "Error" ? "Warning" : "Offline"));
+          mutatedNodeIds.push(record.icon.id);
+        }
+      }
+      if (family === "Loading") {
+        const context = (_u = (_t = /Context=([^,]+)/.exec(name)) == null ? void 0 : _t[1]) != null ? _u : "Local";
+        const label = (_v = record.labels) == null ? void 0 : _v.Label;
+        if (label && context !== "Local") {
+          removePropertyReference(label, "characters");
+          yield setTextCharacters(label, context === "Startup" ? "正在启动压扁工坊…" : "处理中…");
+          mutatedNodeIds.push(label.id);
+        }
+      }
+      if (family === "IconButton") {
+        const state = (_x = (_w = /State=([^,]+)/.exec(name)) == null ? void 0 : _w[1]) != null ? _x : "Default";
+        if (state === "Disabled") {
+          record.component.fills = [bindPaint(v(resources, "GWP / Color Semantics/surface"))];
+          mutatedNodeIds.push(record.component.id);
+        }
+      }
+    }
+    return mutatedNodeIds;
+  });
+  const auditSet = (set) => __async(null, null, function* () {
+    var _a, _b;
+    const descendants = set.findAll();
+    const components = set.children.filter((n) => n.type === "COMPONENT");
+    const hardcodedPaints = [];
+    const bindingCounts = {};
+    const propertyReferences = [];
+    const autoLayoutFailures = [];
+    for (const node of [set, ...descendants]) {
+      const anyNode = node;
+      if (node.type === "COMPONENT" && anyNode.layoutMode === "NONE") autoLayoutFailures.push(node.id);
+      const nodeBindings = anyNode.boundVariables || {};
+      for (const field of Object.keys(nodeBindings)) bindingCounts[field] = (bindingCounts[field] || 0) + 1;
+      if ("fills" in anyNode && Array.isArray(anyNode.fills)) {
+        for (const paint of anyNode.fills) {
+          if (paint.type === "SOLID" && !((_a = paint.boundVariables) == null ? void 0 : _a.color) && !anyNode.fillStyleId) hardcodedPaints.push({ id: node.id, name: node.name, property: "fills" });
+        }
+      }
+      if ("strokes" in anyNode && Array.isArray(anyNode.strokes)) {
+        for (const paint of anyNode.strokes) {
+          if (paint.type === "SOLID" && !((_b = paint.boundVariables) == null ? void 0 : _b.color) && !anyNode.strokeStyleId) hardcodedPaints.push({ id: node.id, name: node.name, property: "strokes" });
+        }
+      }
+      if (anyNode.componentPropertyReferences && Object.keys(anyNode.componentPropertyReferences).length) {
+        propertyReferences.push({ id: node.id, name: node.name, references: anyNode.componentPropertyReferences });
+      }
+    }
+    const opacityBindings = components.filter((component) => /State=(Pressed|Disabled)/.test(component.name)).map((component) => {
+      var _a2, _b2, _c;
+      return {
+        id: component.id,
+        name: component.name,
+        opacityVariableId: (_c = (_b2 = (_a2 = component.boundVariables) == null ? void 0 : _a2.opacity) == null ? void 0 : _b2.id) != null ? _c : null,
+        resolvedOpacity: component.opacity
+      };
+    });
+    return {
+      id: set.id,
+      name: set.name,
+      variantCount: components.length,
+      variantNames: components.map((c) => c.name),
+      componentPropertyDefinitions: set.componentPropertyDefinitions,
+      propertyReferenceCount: propertyReferences.length,
+      propertyReferences,
+      bindingCounts,
+      hardcodedPaints,
+      autoLayoutFailures,
+      opacityBindings,
+      bounds: getBounds(set)
+    };
+  });
+  const prepareBase = (componentsFrame, resources) => __async(null, null, function* () {
+    let base = componentsFrame.findOne((n) => n.type === "FRAME" && n.name === "02_Components/Base");
+    const createdNodeIds = [];
+    const mutatedNodeIds = [componentsFrame.id];
+    if (!base) {
+      base = figma.createFrame();
+      base.name = "02_Components/Base";
+      base.resize(5840, 7600);
+      base.x = 120;
+      base.y = 360;
+      base.fills = [bindPaint(v(resources, "GWP / Color Semantics/surface"))];
+      base.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+      bind(base, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
+      for (const field of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) bind(base, field, v(resources, "GWP / Layout/radius/28"));
+      const raised = resources.effects.get("GWP/Effect/Surface/Raised");
+      if (!raised) throw new Error("Missing GWP/Effect/Surface/Raised");
+      yield base.setEffectStyleIdAsync(raised.id);
+      componentsFrame.appendChild(base);
+      createdNodeIds.push(base.id);
+    }
+    componentsFrame.resizeWithoutConstraints(6080, 8200);
+    componentsFrame.x = 160;
+    componentsFrame.y = 9180;
+    const subtitle = componentsFrame.findOne((n) => n.type === "TEXT" && n.name === "placeholder/02_Components/subtitle");
+    if (subtitle) {
+      yield figma.loadFontAsync(typeof subtitle.fontName === "symbol" ? { family: "Noto Sans SC", style: "Regular" } : subtitle.fontName);
+      subtitle.characters = "GWP-015 · Base interaction components · 逐个创建、验证与截图";
+      mutatedNodeIds.push(subtitle.id);
+    }
+    const section = componentsFrame.parent;
+    if ((section == null ? void 0 : section.type) === "SECTION") {
+      const positions = {
+        "03_User_Flows": [160, 17540],
+        "04_Core_Screens": [3280, 17540],
+        "05_Modes_And_Collection": [160, 18500],
+        "06_Overlays_And_States": [3280, 18500],
+        "07_Prototype": [160, 19460],
+        "08_Dev_Handoff": [3280, 19460],
+        "99_Archive": [160, 20420]
+      };
+      for (const child of section.children) {
+        const target = positions[child.name];
+        if (target && "x" in child) {
+          child.x = target[0];
+          child.y = target[1];
+          mutatedNodeIds.push(child.id);
+        }
+      }
+      section.resizeWithoutConstraints(6400, 21600);
+      mutatedNodeIds.push(section.id);
+    }
+    const icons = yield createIconComponents(base, resources);
+    for (const icon of icons) if (!createdNodeIds.includes(icon.id)) createdNodeIds.push(icon.id);
+    figma.commitUndo();
+    return { base, createdNodeIds, mutatedNodeIds, iconIds: icons.map((icon) => icon.id) };
+  });
+  const buildFamily = (base, family, resources) => __async(null, null, function* () {
+    const config = familyConfig[family];
+    if (!config) throw new Error(`Unsupported GWP family: ${family}`);
+    const existing = base.findOne((n) => n.type === "COMPONENT_SET" && n.name === config.setName);
+    if (existing) return { skipped: true, family, componentSetId: existing.id, audit: yield auditSet(existing), createdNodeIds: [], mutatedNodeIds: [] };
+    const familyFrames = base.children.filter((n) => n.type === "FRAME" && n.name.startsWith("Base/"));
+    const nextY = familyFrames.length ? Math.max(...familyFrames.map((frame) => frame.y + frame.height)) + 80 : 260;
+    const doc = figma.createFrame();
+    doc.name = `Base/${config.title}`;
+    doc.resize(5640, 700);
+    doc.x = 100;
+    doc.y = nextY;
+    doc.fills = [bindPaint(v(resources, "GWP / Color Primitives/white/0"))];
+    doc.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+    bind(doc, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
+    for (const field of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) bind(doc, field, v(resources, "GWP / Layout/radius/20"));
+    base.appendChild(doc);
+    const docTextIds = yield addDocumentation(doc, config, resources);
+    const records = yield config.creator(base, resources);
+    const components = records.map((record) => record.component);
+    const set = figma.combineAsVariants(components, doc);
+    set.name = config.setName;
+    set.description = `${config.description} ${config.usage}`;
+    set.fills = [];
+    set.strokes = [];
+    const maxWidth = Math.max(...components.map((component) => component.width));
+    const maxHeight = Math.max(...components.map((component) => component.height));
+    const cellWidth = maxWidth + 48;
+    const cellHeight = maxHeight + 40;
+    components.forEach((component, index) => {
+      component.x = 40 + index % config.columns * cellWidth;
+      component.y = 40 + Math.floor(index / config.columns) * cellHeight;
+    });
+    const rows = Math.ceil(components.length / config.columns);
+    set.resizeWithoutConstraints(80 + config.columns * cellWidth, 80 + rows * cellHeight);
+    set.x = 100;
+    set.y = 240;
+    const propertyKeys = wireProperties(set, records, family, base);
+    const semanticPresetMutations = yield applyFamilyPresets(set, records, family, base, resources, propertyKeys);
+    const docHeight = set.y + set.height + 80;
+    doc.resizeWithoutConstraints(5640, docHeight);
+    base.resizeWithoutConstraints(5840, doc.y + doc.height + 100);
+    const parent = base.parent;
+    if ((parent == null ? void 0 : parent.type) === "FRAME") parent.resizeWithoutConstraints(6080, base.y + base.height + 120);
+    figma.commitUndo();
+    const allCreated = [doc.id, ...docTextIds, set.id, ...components.map((component) => component.id)];
+    for (const record of records) {
+      if (record.icon) allCreated.push(record.icon.id);
+      if (record.booleanNode) allCreated.push(record.booleanNode.id);
+      if (record.labels) allCreated.push(...Object.values(record.labels).map((label) => label.id));
+    }
+    return {
+      skipped: false,
+      family,
+      documentationFrameId: doc.id,
+      componentSetId: set.id,
+      variantIds: components.map((component) => component.id),
+      propertyKeys,
+      createdNodeIds: Array.from(new Set(allCreated)),
+      mutatedNodeIds: [base.id, parent == null ? void 0 : parent.id, ...semanticPresetMutations].filter(Boolean),
+      audit: yield auditSet(set)
+    };
+  });
+  const createCapabilityProbe = (parent, resources) => __async(null, null, function* () {
+    const existing = parent.findOne((n) => n.type === "COMPONENT_SET" && n.name === "GWP/Probe/ComponentCapabilities");
+    if (existing) return { probeId: existing.id, createdNodeIds: [], audit: yield auditSet(existing) };
+    const icon = iconByName(parent, "Default");
+    const records = [];
+    for (const state of ["Default", "Pressed"]) {
+      const component = figma.createComponent();
+      component.name = `State=${state}`;
+      component.resize(160, 48);
+      configureAutoLayout(component, "HORIZONTAL");
+      component.primaryAxisSizingMode = "AUTO";
+      component.counterAxisSizingMode = "FIXED";
+      applySpacing(component, resources);
+      yield applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/brand"), state, "GWP / Layout/radius/pill");
+      const instance = icon.createInstance();
+      instance.name = "Icon";
+      component.appendChild(instance);
+      const label = yield makeText("Label", "能力探针", resources, { strong: true });
+      component.appendChild(label);
+      records.push({ component, labels: { Label: label }, icon: instance });
+    }
+    const set = figma.combineAsVariants(records.map((record) => record.component), parent);
+    set.name = "GWP/Probe/ComponentCapabilities";
+    set.description = "Temporary GWP-015 capability probe; delete after validation.";
+    set.fills = [];
+    records.forEach((record, index) => {
+      record.component.x = 40 + index * 220;
+      record.component.y = 40;
+    });
+    set.resizeWithoutConstraints(520, 128);
+    set.x = 4700;
+    set.y = 100;
+    const labelKey = set.addComponentProperty("Label", "TEXT", "能力探针");
+    const showKey = set.addComponentProperty("Show Icon", "BOOLEAN", true);
+    const iconKey = set.addComponentProperty("Icon", "INSTANCE_SWAP", icon.id);
+    for (const record of records) {
+      record.labels.Label.componentPropertyReferences = { characters: labelKey };
+      record.icon.componentPropertyReferences = { visible: showKey, mainComponent: iconKey };
+    }
+    figma.commitUndo();
+    return { probeId: set.id, createdNodeIds: [set.id, ...records.map((record) => record.component.id)], propertyKeys: { labelKey, showKey, iconKey }, audit: yield auditSet(set) };
+  });
   const handleWriteComponentRequest = (request) => __async(null, null, function* () {
+    var _a, _b;
     switch (request.type) {
+      case "create_component": {
+        const p = request.params || {};
+        const nodeId = request.nodeIds && request.nodeIds[0];
+        if (!nodeId) throw new Error("nodeId is required");
+        const envelope = parseEnvelope(p.name);
+        if (!envelope) return null;
+        const resources = yield loadGwpResources();
+        const node = yield requireNode(nodeId);
+        if (envelope.operation === "recover-components-frame") {
+          if (node.type !== "COMPONENT" || !envelope.expectedName || node.name !== envelope.expectedName) {
+            throw new Error("recovery must target the exact misconverted component ID and expectedName");
+          }
+          const parent = node.parent;
+          if (!parent || !("children" in parent)) throw new Error("recovery target has no scene parent");
+          const index = parent.children.indexOf(node);
+          const frame = figma.createFrame();
+          frame.name = "02_Components";
+          frame.resize(node.width, node.height);
+          frame.x = node.x;
+          frame.y = node.y;
+          frame.fills = node.fills === figma.mixed ? [] : [...node.fills];
+          frame.strokes = [...node.strokes];
+          frame.opacity = node.opacity;
+          frame.clipsContent = node.clipsContent;
+          if (node.cornerRadius !== figma.mixed) frame.cornerRadius = node.cornerRadius;
+          while (node.children.length) frame.appendChild(node.children[0]);
+          parent.insertChild(index, frame);
+          node.remove();
+          figma.commitUndo();
+          return {
+            type: request.type,
+            requestId: request.requestId,
+            data: { recoveredFrameId: frame.id, removedComponentId: nodeId, createdNodeIds: [frame.id], mutatedNodeIds: [] }
+          };
+        }
+        if (envelope.operation === "prepare-base") {
+          if (node.type !== "FRAME" || node.name !== "02_Components") throw new Error("prepare-base must target 02_Components frame");
+          const result = yield prepareBase(node, resources);
+          return { type: request.type, requestId: request.requestId, data: __spreadValues({ baseId: result.base.id }, result) };
+        }
+        if (envelope.operation === "capability-probe") {
+          if (node.type !== "FRAME" || node.name !== "02_Components/Base") throw new Error("capability-probe must target 02_Components/Base");
+          const result = yield createCapabilityProbe(node, resources);
+          return { type: request.type, requestId: request.requestId, data: result };
+        }
+        if (envelope.operation === "build-family") {
+          if (node.type !== "FRAME" || node.name !== "02_Components/Base") throw new Error("build-family must target 02_Components/Base");
+          if (!envelope.family) throw new Error("family is required");
+          const result = yield buildFamily(node, envelope.family, resources);
+          return { type: request.type, requestId: request.requestId, data: result };
+        }
+        if (envelope.operation === "repair-family-presets") {
+          if (node.type !== "COMPONENT_SET") throw new Error("repair-family-presets must target a GWP component set");
+          const family = (_a = Object.entries(familyConfig).find(([, config]) => config.setName === node.name)) == null ? void 0 : _a[0];
+          if (!family) throw new Error(`No GWP family configuration for ${node.name}`);
+          const base = (_b = node.parent) == null ? void 0 : _b.parent;
+          if (!base || base.type !== "FRAME" || base.name !== "02_Components/Base") {
+            throw new Error("component set is not inside 02_Components/Base documentation frame");
+          }
+          const propertyKeys = Object.fromEntries(Object.entries(node.componentPropertyDefinitions).filter(([, definition]) => !["VARIANT"].includes(definition.type)).map(([key]) => [key.split("#")[0], key]));
+          const records = node.children.filter((child) => child.type === "COMPONENT").map((component) => {
+            const labelName = family === "Message" ? "Message" : "Label";
+            const label = component.findOne((child) => child.type === "TEXT" && child.name === labelName);
+            const icon = component.findOne((child) => child.type === "INSTANCE");
+            return { component, labels: label ? { [labelName]: label } : void 0, icon: icon != null ? icon : void 0 };
+          });
+          const mutatedNodeIds = yield applyFamilyPresets(node, records, family, base, resources, propertyKeys);
+          figma.commitUndo();
+          return {
+            type: request.type,
+            requestId: request.requestId,
+            data: { componentSetId: node.id, mutatedNodeIds, audit: yield auditSet(node) }
+          };
+        }
+        if (envelope.operation === "audit") {
+          if (node.type !== "COMPONENT_SET") throw new Error("audit must target a COMPONENT_SET");
+          return { type: request.type, requestId: request.requestId, data: { audit: yield auditSet(node) } };
+        }
+        throw new Error(`Unsupported GWP component operation: ${envelope.operation}`);
+      }
       case "swap_component": {
         const p = request.params || {};
         const nodeId = request.nodeIds && request.nodeIds[0];
@@ -2263,11 +3168,7 @@ var __async = (__this, __arguments, generator) => {
         if (component.type !== "COMPONENT") throw new Error(`Node ${p.componentId} is not a COMPONENT`);
         node.mainComponent = component;
         figma.commitUndo();
-        return {
-          type: request.type,
-          requestId: request.requestId,
-          data: { id: node.id, name: node.name, componentId: component.id, componentName: component.name }
-        };
+        return { type: request.type, requestId: request.requestId, data: { id: node.id, name: node.name, componentId: component.id, componentName: component.name } };
       }
       case "detach_instance": {
         const nodeIds = request.nodeIds || [];
@@ -2287,11 +3188,7 @@ var __async = (__this, __arguments, generator) => {
           results.push({ nodeId: nid, newId: frame.id, name: frame.name });
         }
         figma.commitUndo();
-        return {
-          type: request.type,
-          requestId: request.requestId,
-          data: { results }
-        };
+        return { type: request.type, requestId: request.requestId, data: { results } };
       }
       case "delete_nodes": {
         const nodeIds = request.nodeIds || [];
@@ -2324,11 +3221,7 @@ var __async = (__this, __arguments, generator) => {
           throw new Error("pageId or pageName is required");
         }
         yield figma.setCurrentPageAsync(page);
-        return {
-          type: request.type,
-          requestId: request.requestId,
-          data: { id: page.id, name: page.name }
-        };
+        return { type: request.type, requestId: request.requestId, data: { id: page.id, name: page.name } };
       }
       case "group_nodes": {
         const p = request.params || {};
@@ -2342,11 +3235,7 @@ var __async = (__this, __arguments, generator) => {
         const group = figma.group(validNodes, parent);
         if (p.name) group.name = p.name;
         figma.commitUndo();
-        return {
-          type: request.type,
-          requestId: request.requestId,
-          data: { id: group.id, name: group.name, type: group.type }
-        };
+        return { type: request.type, requestId: request.requestId, data: { id: group.id, name: group.name, type: group.type } };
       }
       case "ungroup_nodes": {
         const nodeIds = request.nodeIds || [];
@@ -2385,11 +3274,11 @@ var __async = (__this, __arguments, generator) => {
     const actions = (_a = r.actions) != null ? _a : r.action != null ? [r.action] : [];
     return { trigger: (_b = r.trigger) != null ? _b : null, actions };
   }
-  function parseArray(v) {
-    if (Array.isArray(v)) return v;
-    if (typeof v === "string") {
+  function parseArray(v2) {
+    if (Array.isArray(v2)) return v2;
+    if (typeof v2 === "string") {
       try {
-        return JSON.parse(v);
+        return JSON.parse(v2);
       } catch (e) {
         return [];
       }
@@ -2543,7 +3432,7 @@ var __async = (__this, __arguments, generator) => {
   });
   const handleWriteRequest = (request) => __async(null, null, function* () {
     var _a, _b, _c, _d, _e, _f;
-    return (_f = (_e = (_d = (_c = (_b = (_a = yield handleWriteCreateRequest(request)) != null ? _a : yield handleWriteModifyRequest(request)) != null ? _b : yield handleWriteStyleRequest(request)) != null ? _c : yield handleWriteVariableRequest(request)) != null ? _d : yield handleWriteComponentRequest(request)) != null ? _e : yield handleWritePrototypeRequest(request)) != null ? _f : yield handleWritePageRequest(request);
+    return (_f = (_e = (_d = (_c = (_b = (_a = yield handleWriteComponentRequest(request)) != null ? _a : yield handleWriteCreateRequest(request)) != null ? _b : yield handleWriteModifyRequest(request)) != null ? _c : yield handleWriteStyleRequest(request)) != null ? _d : yield handleWriteVariableRequest(request)) != null ? _e : yield handleWritePrototypeRequest(request)) != null ? _f : yield handleWritePageRequest(request);
   });
   const FAST_TRAVERSAL = /* @__PURE__ */ new Set([
     "get_document",
