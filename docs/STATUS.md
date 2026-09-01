@@ -12,17 +12,17 @@
 
 ## 下一动作
 
-**认领并执行 `GWP-016`：Figma导航与内容组件。**
+**认领并执行 `GWP-017`：Figma游戏HUD与结算组件。**
 
-在`GWP_给我压扁/02_Components/Content`内逐个建立TopBar、BottomNav、ModeCard、ThemeCard、LevelCard、CollectionCell、ItemDetailCard、SkinCard、RewardCard/UnlockPanel与AchievementCard。必须复用GWP-014 Foundations和GWP-015基础组件，验证长中文、0值、最大值与空内容状态。全部Figma操作只使用`figma-mcp-rust`与仓库内唯一命名companion plugin；不得调用官方Figma MCP，不得创建正式屏幕或修改Cocos工程。
+在`GWP_给我压扁/02_Components/Gameplay`内逐个建立GameplayHUD、PressureMeter、ComboBadge、PressResult、TutorialCoachmark、ItemQueue/LevelProgress、TowerSummary、StarResult/ScoreSummary、SharePreview与PausePanel。必须复用GWP-014 Foundations、GWP-015基础组件和GWP-016内容组件。全部Figma操作只使用`figma-mcp-rust`与仓库内唯一命名companion plugin；不得调用官方Figma MCP，不得创建正式屏幕或修改Cocos工程。
 
 ## 活跃任务
 
-当前无活跃任务。
+- 当前无活跃任务；`GWP-017`已解锁，等待下一窗口认领。
 
 ## READY
 
-- `GWP-016`：Figma导航与内容组件
+- `GWP-017`：Figma游戏HUD与结算组件
 
 ## 设计任务依赖链
 
@@ -46,7 +46,7 @@ GWP-010 UI体验规格
 → GWP-026 用户评审、设计冻结与Dev Handoff
 ```
 
-`GWP-010`至`GWP-015`已`DONE`，`GWP-016`当前为`READY`；`GWP-017`至`GWP-026`保持`BLOCKED`，按上述顺序逐一解锁。所有Figma写任务`parallel_safe: false`，禁止并行修改设计文件。从GWP-015起采用单一执行窗口闭环：同一窗口完成实现、真实验收、修复、主线集成、标记DONE和后续解锁，不再另开审阅集成对话。
+`GWP-010`至`GWP-016`已`DONE`，`GWP-017`当前为`READY`；`GWP-018`至`GWP-026`保持`BLOCKED`，按上述顺序逐一解锁。所有Figma写任务`parallel_safe: false`，禁止并行修改设计文件。从GWP-015起采用单一执行窗口闭环：同一窗口完成实现、真实验收、修复、主线集成、标记DONE和后续解锁，不再另开审阅集成对话。
 
 ## Cocos硬门禁
 
@@ -68,6 +68,7 @@ GWP-010 UI体验规格
 - `GWP-013`：Figma文件、共享Page和编辑边界已发现；唯一项目Section `337:139`、gap analysis、80个变量/70个组件v1范围与可恢复状态台账已验收并合入`main`。
 - `GWP-014`：Figma Foundations已通过真实文件复验；7个集合、80个变量、明确scope与WEB code syntax、9个semantic alias、7个文字样式、5个效果样式、1个移动网格、10个一级Frame及7个Foundations说明区域已验收并合入`main`。
 - `GWP-015`：Figma基础交互组件已验收；7个Component Set、102个受控Variant、8个内部图标原子、选择性TEXT/BOOLEAN/INSTANCE_SWAP属性、语义状态预设、变量绑定与7张独立截图已冻结并合入`main`。
+- `GWP-016`：先以ChatGPT内置gpt-image-2生成组件视觉板，再在Figma中原生重建导航与内容组件；11个Component Set、63个受控Variant、Image-2参考节点、长中文/0值/最大值/空态覆盖及11张独立截图已验收。
 - 完整v1.0范围：5个主题、75关、至少50件物品、4种模式。
 - 永久排除排行榜、公会、家园、剧情和多人对战。
 - Figma唯一设计入口与共享Page编辑边界已记录。
@@ -93,6 +94,7 @@ GWP-010 UI体验规格
 - 已集成Figma发现分支：`codex/gwp-013-figma-discovery`（提交`f0bacfb`）
 - 已集成Figma Foundations分支：`codex/gwp-014-figma-foundations`（提交`25f016a`、`e281715`、`83ba12c`）
 - 已集成Figma基础组件分支：`codex/gwp-015-base-components`
+- 已集成Figma导航与内容组件分支：`codex/gwp-016-content-components`
 - Cocos：主线未初始化，符合当前硬门禁
-- Figma：项目Section `GWP_给我压扁`（`337:139`）已完成Foundations与基础交互组件；正式屏幕尚未开始
-- 当前执行任务：无；下一任务为`GWP-016`
+- Figma：项目Section `GWP_给我压扁`（`337:139`）已完成Foundations、基础交互组件及导航与内容组件；正式屏幕尚未开始
+- 下一执行任务：`GWP-017`
