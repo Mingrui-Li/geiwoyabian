@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "runId": "gwp-015-20260831-01",
-  "taskId": "GWP-015",
-  "branch": "codex/gwp-015-base-components",
+  "runId": "gwp-016-20260901-01",
+  "taskId": "GWP-016",
+  "branch": "codex/gwp-016-content-components",
   "integratedInto": "main",
   "phase": "phase3-complete",
-  "step": "gwp-015-integrated",
+  "step": "gwp-016-integrated",
   "file": {
     "name": "mini-game",
     "key": "83pqrCcig644vC20QXM5G1",
@@ -96,7 +96,24 @@
       "gwp-015-a-progress.png": "97f133236838e650790d68bac838560c4a7d9c7275b793a9e55ee9bae93ab51d",
       "gwp-015-c-toast-inline-message.png": "7dc565df00894b9a46f9977c5779b90d9f4b04f9bc15d9995e918e26b912c489",
       "gwp-015-a-loading.png": "1cb4d8e779a82743abaf1ac0e2a5b639c293687b7c97236f1694e6dec6d2d7d2"
-    }
+    },
+    "gwp016ContentFrameId": "354:1748",
+    "gwp016Image2ReferenceFrameId": "354:1749",
+    "gwp016Image2ReferenceNodeId": "354:1750",
+    "gwp016Image2Reference": "design/wip/gwp-016-content-components/component-board-v02.png",
+    "gwp016ComponentScreenshots": [
+      "design/wip/gwp-016-content-components/figma-topbar-set-v04.png",
+      "design/wip/gwp-016-content-components/figma-bottom-nav-set-v02.png",
+      "design/wip/gwp-016-content-components/figma-mode-card-set-v02.png",
+      "design/wip/gwp-016-content-components/figma-theme-card-set-v02.png",
+      "design/wip/gwp-016-content-components/figma-level-card-set-v03.png",
+      "design/wip/gwp-016-content-components/figma-collection-cell-set-v02.png",
+      "design/wip/gwp-016-content-components/figma-item-detail-set-v03.png",
+      "design/wip/gwp-016-content-components/figma-skin-card-set-v02.png",
+      "design/wip/gwp-016-content-components/figma-reward-card-set-v02.png",
+      "design/wip/gwp-016-content-components/figma-unlock-panel-set-v02.png",
+      "design/wip/gwp-016-content-components/figma-achievement-card-set-v03.png"
+    ]
   },
   "discovery": {
     "localVariableCollectionCount": 2,
@@ -296,6 +313,8 @@
       "00_Cover": "348:241",
       "01_Foundations": "348:242",
       "02_Components": "348:243",
+      "02_Components/Base": "352:390",
+      "02_Components/Content": "354:1748",
       "03_User_Flows": "348:244",
       "04_Core_Screens": "348:245",
       "05_Modes_And_Collection": "348:246",
@@ -396,6 +415,72 @@
         "componentSetId": "353:1052",
         "variantCount": 3,
         "validation": "passed: Startup/Local/Button contexts, semantic labels, TEXT/BOOLEAN properties, zero hardcoded paints and Auto Layout failures"
+      },
+      "TopBar": {
+        "documentationFrameId": "355:2812",
+        "componentSetId": "355:2882",
+        "variantCount": 6,
+        "validation": "passed: Home/Page contexts, Default/Scrolled/Offline states, readable resource capsule, no placeholder-dot artwork"
+      },
+      "BottomNav": {
+        "documentationFrameId": "355:1845",
+        "componentSetId": "355:2009",
+        "variantCount": 12,
+        "validation": "passed: four destinations with selected, badge and disabled states"
+      },
+      "ModeCard": {
+        "documentationFrameId": "355:2010",
+        "componentSetId": "355:2062",
+        "variantCount": 4,
+        "validation": "passed: Default/Selected/Locked/Completed with editable machine illustration and long Chinese copy"
+      },
+      "ThemeCard": {
+        "documentationFrameId": "355:2063",
+        "componentSetId": "355:2127",
+        "variantCount": 4,
+        "validation": "passed: 0/45, partial and 45/45 progress with workshop preview"
+      },
+      "LevelCard": {
+        "documentationFrameId": "355:2609",
+        "componentSetId": "355:2670",
+        "variantCount": 5,
+        "validation": "passed: current, locked, completed and perfect states with 0–3 stars and editable preview"
+      },
+      "CollectionCell": {
+        "documentationFrameId": "355:2158",
+        "componentSetId": "355:2194",
+        "variantCount": 4,
+        "validation": "passed: unknown silhouette, discovered and 0/3–3/3 result progress"
+      },
+      "ItemDetailCard": {
+        "documentationFrameId": "355:2671",
+        "componentSetId": "355:2738",
+        "variantCount": 6,
+        "validation": "passed: Perfect/Under/Over × Default/Empty, duck artwork, long material copy, zero and maximum statistics"
+      },
+      "SkinCard": {
+        "documentationFrameId": "355:2260",
+        "componentSetId": "355:2308",
+        "variantCount": 4,
+        "validation": "passed: Locked/Unlockable/Selected/Applied with machine skin illustration"
+      },
+      "RewardCard": {
+        "documentationFrameId": "355:2309",
+        "componentSetId": "355:2393",
+        "variantCount": 8,
+        "validation": "passed: Reward/Item/Theme/Skin × Granted/Claimed with distinct editable artwork"
+      },
+      "UnlockPanel": {
+        "documentationFrameId": "355:2394",
+        "componentSetId": "355:2500",
+        "variantCount": 6,
+        "validation": "passed: Item/Theme/Skin × Revealing/Ready using RewardCard instances"
+      },
+      "AchievementCard": {
+        "documentationFrameId": "355:2739",
+        "componentSetId": "355:2811",
+        "variantCount": 4,
+        "validation": "passed: Pending/InProgress/Completed/Claimed with badge, 0/3–3/3 progress and long Chinese copy"
       }
     },
     "screens": {}
@@ -406,7 +491,7 @@
     "sectionMetadata": "passed: unique node 337:139, bounds 20050,0,6400x21600, childCount 10",
     "sectionScreenshot": "passed: docs/figma/screenshots/gwp-013-section-337-139.png",
     "outsideNodeIntegrity": "passed: 8 pre-existing top-level nodes unchanged",
-    "gitDiffCheck": "passed on 2026-08-31 for GWP-014",
+    "gitDiffCheck": "passed on 2026-09-01 for GWP-016",
     "gwp014CapabilityProbe": "passed on 2026-08-31: scope and WEB code syntax round-trip, temporary collection deleted",
     "gwp014VariableAudit": "passed: 7 collections, 80 variables, 7 Default modes, 80 explicit scopes, 80 unique WEB syntaxes, 9 aliases",
     "gwp014StyleAudit": "passed: 7 Noto Sans SC text styles, 5 effect styles, 1 four-column mobile grid style",
@@ -419,7 +504,11 @@
     "gwp015ComponentAudit": "passed: 7 component sets, 102 controlled variants, 8 internal icon components, zero hardcoded paints and component-root Auto Layout failures",
     "gwp015VisualQa": "passed: 7 isolated component-set exports; semantic state presets and Disabled/Locked contrast repaired before freeze",
     "gwp015OutsideNodeIntegrity": "passed: final Section scan retained the 8 pre-existing IDs and bounds plus GWP Section 337:139",
-    "integrationRecheck": "passed on 2026-09-01: companion TypeScript check and Vite build, artifact hash comparison, STATE JSON parse, 7 screenshot existence checks, final Figma node/Section scans, and git diff check"
+    "gwp016ImageFirstWorkflow": "passed: gpt-image-2 component board generated first, imported into Figma as reference nodes 354:1749/354:1750, then rebuilt as native editable components",
+    "gwp016ComponentAudit": "passed: 11 component sets, 63 controlled variants, Auto Layout roots, variable bindings, zero hardcoded paints and component-root Auto Layout failures in per-family build results",
+    "gwp016StateCoverage": "passed: long Chinese copy, 0 values, 999/99,999 maxima, empty silhouettes, locked/offline/disabled/completed/claimed states",
+    "gwp016VisualQa": "passed after targeted repair: TopBar placeholders removed, offline contrast repaired, ItemDetail duck/empty routing corrected, Level and Achievement visual anchors added",
+    "integrationRecheck": "passed on 2026-09-01: companion Vite build, artifact hash comparison, STATE JSON parse, required evidence existence checks, per-family Figma build audits, visual screenshots, and git diff check"
   },
   "completedSteps": [
     "P0.a",
@@ -445,10 +534,18 @@
     "GWP-015-capability-probe",
     "GWP-015-seven-component-sets",
     "GWP-015-visual-qa",
-    "GWP-015-final-node-scan"
+    "GWP-015-final-node-scan",
+    "P3.a",
+    "P3.b",
+    "P3.c",
+    "P3.d",
+    "P3.e",
+    "GWP-016-image-first-reference",
+    "GWP-016-eleven-component-sets",
+    "GWP-016-visual-qa"
   ],
   "pending": [
-    "GWP-016 is READY after GWP-015 main integration",
+    "GWP-017 is READY after GWP-016 main integration",
     "Optional audit: use remote component search only if a future figma-mcp-rust version exposes it; official Figma MCP is prohibited and v1 has no remote-library dependency"
   ],
   "lastUpdated": "2026-09-01"

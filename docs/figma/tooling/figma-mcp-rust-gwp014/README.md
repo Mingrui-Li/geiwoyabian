@@ -39,7 +39,7 @@ The MCP server remains the installed 0.2.0 binary on `127.0.0.1:1994`; only the 
 
 The five files in `src-overlay/` replace the matching upstream 0.2.0 source files before running the upstream Vite build. Built artifact SHA-256 values:
 
-- `dist/code.js`: `197762b410b8eb81f25495d914343fa5048300aefa2e855c2f7120a1b567e6c4`
+- `dist/code.js`: `d873718656bbb678f1479c0231a62e5e6e0470a2ecc864f0aafe44845976d5c2`
 - `dist/index.html`: `bf21e369697ad95b52da3503ed228cb720f8de9fd022fc4cc9637ef5e5250ce1`
 
 The upstream project is MIT-licensed. This bundle is repository-local tooling for the deterministic GWP design workflow; it is not a fork of the Rust server.

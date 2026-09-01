@@ -6,7 +6,7 @@ type SceneWithVariables = SceneNode & {
 
 type GwpEnvelope = {
   $gwpComponent: 1;
-  operation: "recover-components-frame" | "prepare-base" | "capability-probe" | "build-family" | "repair-family-presets" | "audit";
+  operation: "recover-components-frame" | "prepare-base" | "prepare-content" | "capability-probe" | "build-family" | "build-content-family" | "repair-family-presets" | "audit";
   family?: string;
   expectedName?: string;
 };
@@ -128,8 +128,11 @@ const applyContainerTokens = async (
   radius = "GWP / Layout/radius/20",
 ) => {
   node.fills = [bindPaint(fillVariable)];
-  node.strokes = [bindPaint(v(resources, "GWP / Color Primitives/white/0"))];
-  bind(node, "strokeWeight", v(resources, "GWP / Layout/stroke/sticker-white"));
+  // Content components use the approved ink-navy silhouette. The previous
+  // white-only edge disappeared on documentation canvases and made every card
+  // read like a generic web tile instead of the approved puffy-sticker system.
+  node.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+  bind(node, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
   for (const field of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) {
     bind(node, field, v(resources, radius));
   }
@@ -249,6 +252,7 @@ type VariantRecord = {
   labels?: Record<string, TextNode>;
   icon?: InstanceNode;
   booleanNode?: SceneNode;
+  booleanNodes?: Record<string, SceneNode>;
 };
 
 const createButtonVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
@@ -466,6 +470,532 @@ const createLoadingVariants = async (base: FrameNode, resources: Awaited<ReturnT
   return records;
 };
 
+const makeWrappedText = async (
+  name: string,
+  characters: string,
+  width: number,
+  resources: Awaited<ReturnType<typeof loadGwpResources>>,
+  options: { strong?: boolean; scale?: "body" | "caption" | "micro"; color?: Variable } = {},
+) => {
+  const text = await makeText(name, characters, resources, options);
+  text.textAutoResize = "HEIGHT";
+  text.resize(width, options.scale === "micro" ? 16 : options.scale === "caption" ? 20 : 24);
+  return text;
+};
+
+const applySimpleSurface = (
+  node: FrameNode | RectangleNode | EllipseNode,
+  resources: Awaited<ReturnType<typeof loadGwpResources>>,
+  fill: Variable,
+  radius = "GWP / Layout/radius/12",
+) => {
+  node.fills = [bindPaint(fill)];
+  node.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+  bind(node, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
+  if (node.type === "FRAME" || node.type === "RECTANGLE") bind(node, "cornerRadius", v(resources, radius));
+};
+
+const findComponentSet = (scope: FrameNode, name: string) => {
+  const set = scope.findOne((node) => node.type === "COMPONENT_SET" && node.name === name);
+  if (!set || set.type !== "COMPONENT_SET") throw new Error(`Required component set missing: ${name}`);
+  return set;
+};
+
+const appendVariantInstance = (
+  parent: ComponentNode | FrameNode,
+  scope: FrameNode,
+  setName: string,
+  variantName: string,
+  layerName: string,
+) => {
+  const set = findComponentSet(scope, setName);
+  const component = set.children.find((child) => child.type === "COMPONENT" && child.name === variantName);
+  if (!component || component.type !== "COMPONENT") throw new Error(`Variant missing: ${setName}/${variantName}`);
+  const instance = component.createInstance();
+  instance.name = layerName;
+  parent.appendChild(instance);
+  return instance;
+};
+
+const setInstanceProperty = (instance: InstanceNode, propertyName: string, value: string | boolean) => {
+  const key = Object.keys(instance.componentProperties).find((candidate) => candidate.split("#")[0] === propertyName);
+  if (key) instance.setProperties({ [key]: value });
+};
+
+const createPreviewSlot = async (
+  parent: ComponentNode | FrameNode,
+  name: string,
+  label: string,
+  width: number,
+  height: number,
+  resources: Awaited<ReturnType<typeof loadGwpResources>>,
+  fill = v(resources, "GWP / Color Semantics/accent"),
+) => {
+  const slot = figma.createFrame();
+  slot.name = name;
+  slot.resize(width, height);
+  configureAutoLayout(slot, "VERTICAL");
+  slot.primaryAxisSizingMode = "FIXED";
+  slot.counterAxisSizingMode = "FIXED";
+  applySimpleSurface(slot, resources, fill, "GWP / Layout/radius/20");
+  const art = figma.createFrame();
+  art.name = `${name}/Illustration`;
+  const artWidth = Math.max(24, Math.min(width - 16, 120));
+  const artHeight = Math.max(24, Math.min(height - 12, 84));
+  art.resize(artWidth, artHeight);
+  art.fills = [];
+  art.clipsContent = false;
+  slot.appendChild(art);
+
+  const addRect = (layerName: string, x: number, y: number, w: number, h: number, color: Variable, radius = 6) => {
+    const node = figma.createRectangle();
+    node.name = `${name}/${layerName}`;
+    node.resize(w, h);
+    node.x = x;
+    node.y = y;
+    node.cornerRadius = radius;
+    node.fills = [bindPaint(color)];
+    node.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+    bind(node, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
+    art.appendChild(node);
+    return node;
+  };
+  const addEllipse = (layerName: string, x: number, y: number, w: number, h: number, color: Variable) => {
+    const node = figma.createEllipse();
+    node.name = `${name}/${layerName}`;
+    node.resize(w, h);
+    node.x = x;
+    node.y = y;
+    node.fills = [bindPaint(color)];
+    node.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+    bind(node, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
+    art.appendChild(node);
+    return node;
+  };
+
+  const key = `${name} ${label}`;
+  const cx = artWidth / 2;
+  const cy = artHeight / 2;
+  if (/未知|剪影|\?/.test(key)) {
+    addEllipse("Unknown/Silhouette", cx - 28, cy - 28, 56, 56, v(resources, "GWP / Color Semantics/disabled"));
+    const mark = await makeText(`${name}/Unknown Mark`, "?", resources, { strong: true });
+    art.appendChild(mark);
+    mark.x = cx - 6;
+    mark.y = cy - 14;
+  } else if (/橡皮鸭|鸭/.test(key)) {
+    addEllipse("Duck/Body", cx - 30, cy - 10, 60, 42, v(resources, "GWP / Color Semantics/brand"));
+    addEllipse("Duck/Head", cx - 17, cy - 32, 36, 36, v(resources, "GWP / Color Semantics/brand"));
+    addEllipse("Duck/Eye", cx + 5, cy - 22, 6, 6, v(resources, "GWP / Color Semantics/text/primary"));
+    addEllipse("Duck/Beak", cx + 15, cy - 17, 24, 12, v(resources, "GWP / Color Semantics/danger"));
+    addEllipse("Duck/Wing", cx - 22, cy + 1, 30, 20, v(resources, "GWP / Color Semantics/brand"));
+  } else if (/Theme|厨房|工坊主题/.test(key)) {
+    addRect("Workshop/Board", cx - 42, cy - 28, 84, 58, v(resources, "GWP / Color Semantics/surface"), 10);
+    addRect("Workshop/Lamp Arm", cx - 30, cy - 18, 10, 42, v(resources, "GWP / Color Semantics/accent"), 5);
+    addEllipse("Workshop/Lamp", cx - 42, cy - 30, 34, 24, v(resources, "GWP / Color Semantics/accent"));
+    addRect("Workshop/Toolbox", cx, cy, 38, 28, v(resources, "GWP / Color Semantics/accent"), 6);
+  } else if (/机器|模式|Skin/.test(key)) {
+    addRect("Machine/Bed", cx - 38, cy + 18, 76, 16, v(resources, "GWP / Color Semantics/accent"), 8);
+    addRect("Machine/Left Post", cx - 34, cy - 20, 12, 44, v(resources, "GWP / Color Semantics/brand"), 5);
+    addRect("Machine/Right Post", cx + 22, cy - 20, 12, 44, v(resources, "GWP / Color Semantics/brand"), 5);
+    addRect("Machine/Top", cx - 40, cy - 30, 80, 18, v(resources, "GWP / Color Semantics/brand"), 7);
+    addEllipse("Machine/Press", cx - 15, cy - 14, 30, 38, v(resources, "GWP / Color Semantics/surface"));
+    addRect("Machine/Hazard", cx - 22, cy - 2, 44, 8, v(resources, "GWP / Color Semantics/warning"), 3);
+  } else if (/纸箱|Item|物品|Collection/.test(key)) {
+    addRect("Box/Body", cx - 30, cy - 28, 60, 58, v(resources, "GWP / Color Semantics/warning"), 8);
+    addRect("Box/Tape", cx - 6, cy - 28, 12, 58, v(resources, "GWP / Color Semantics/brand"), 2);
+    addRect("Box/Seam", cx - 30, cy - 4, 60, 8, v(resources, "GWP / Color Semantics/surface"), 2);
+  } else if (/Reward|奖励|星/.test(key)) {
+    addRect("Gift/Box", cx - 30, cy - 12, 60, 42, v(resources, "GWP / Color Semantics/accent"), 8);
+    addRect("Gift/Ribbon V", cx - 5, cy - 12, 10, 42, v(resources, "GWP / Color Semantics/danger"), 3);
+    addRect("Gift/Ribbon H", cx - 34, cy - 20, 68, 14, v(resources, "GWP / Color Semantics/danger"), 5);
+    addEllipse("Gift/Bow L", cx - 20, cy - 34, 22, 18, v(resources, "GWP / Color Semantics/danger"));
+    addEllipse("Gift/Bow R", cx - 2, cy - 34, 22, 18, v(resources, "GWP / Color Semantics/danger"));
+  } else {
+    addEllipse("Duck/Body", cx - 30, cy - 10, 60, 42, v(resources, "GWP / Color Semantics/brand"));
+    addEllipse("Duck/Head", cx - 17, cy - 32, 36, 36, v(resources, "GWP / Color Semantics/brand"));
+    addEllipse("Duck/Eye", cx + 5, cy - 22, 6, 6, v(resources, "GWP / Color Semantics/text/primary"));
+    addEllipse("Duck/Beak", cx + 15, cy - 17, 24, 12, v(resources, "GWP / Color Semantics/danger"));
+    addEllipse("Duck/Wing", cx - 22, cy + 1, 30, 20, v(resources, "GWP / Color Semantics/brand"));
+  }
+  parent.appendChild(slot);
+  return slot;
+};
+
+const createStatusText = async (
+  parent: ComponentNode | FrameNode,
+  name: string,
+  text: string,
+  resources: Awaited<ReturnType<typeof loadGwpResources>>,
+  tone: "normal" | "success" | "warning" | "danger" = "normal",
+) => {
+  const color = tone === "success"
+    ? v(resources, "GWP / Color Semantics/success")
+    : tone === "warning"
+      ? v(resources, "GWP / Color Semantics/warning")
+      : tone === "danger"
+        ? v(resources, "GWP / Color Semantics/danger")
+        : v(resources, "GWP / Color Semantics/text/secondary");
+  const node = await makeText(name, text, resources, { strong: tone !== "normal", scale: "micro", color });
+  parent.appendChild(node);
+  return node;
+};
+
+const createTopBarVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const context of ["Home", "Page"]) {
+    for (const state of ["Default", "Scrolled", "Offline"]) {
+      const component = figma.createComponent();
+      component.name = `Context=${context}, State=${state}`;
+      component.resize(360, 72);
+      configureAutoLayout(component, "HORIZONTAL");
+      component.primaryAxisSizingMode = "FIXED";
+      component.counterAxisSizingMode = "FIXED";
+      bind(component, "width", v(resources, "GWP / Layout/size/canvas-base-width"));
+      applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/8", "GWP / Layout/spacing/8");
+      await applyContainerTokens(component, resources, state === "Scrolled" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+      const back = appendVariantInstance(component, base, "GWP/A-IconButton", "Role=Back, Size=44, State=Default", "Back Action");
+      back.visible = context === "Page";
+      const title = await makeText("Title", context === "Home" ? "给我压扁！" : "主题工坊", resources, { strong: true });
+      component.appendChild(title);
+      title.layoutGrow = 1;
+      const resource = figma.createFrame();
+      resource.name = "Resource Capsule";
+      resource.resize(state === "Offline" ? 72 : 76, 40);
+      configureAutoLayout(resource, "HORIZONTAL");
+      resource.primaryAxisSizingMode = "FIXED";
+      resource.counterAxisSizingMode = "FIXED";
+      applySpacing(resource, resources, "GWP / Layout/spacing/12", "GWP / Layout/spacing/8", "GWP / Layout/spacing/4");
+      await applyContainerTokens(resource, resources, state === "Offline" ? v(resources, "GWP / Color Semantics/warning") : v(resources, "GWP / Color Semantics/accent"), "Default", "GWP / Layout/radius/20");
+      const resourceGlyph = await makeText("Resource Glyph", state === "Offline" ? "×" : "★", resources, { strong: true });
+      const resourceValue = await makeText("Resource Value", state === "Offline" ? "离线" : "9", resources, { strong: true, scale: "caption" });
+      resource.appendChild(resourceGlyph);
+      resource.appendChild(resourceValue);
+      component.appendChild(resource);
+      const settings = figma.createFrame();
+      settings.name = "Settings Action";
+      settings.resize(44, 44);
+      configureAutoLayout(settings, "VERTICAL");
+      settings.primaryAxisSizingMode = "FIXED";
+      settings.counterAxisSizingMode = "FIXED";
+      await applyContainerTokens(settings, resources, v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+      const settingsGlyph = await makeText("Settings Glyph", "≡", resources, { strong: true });
+      settings.appendChild(settingsGlyph);
+      component.appendChild(settings);
+      records.push({
+        component,
+        labels: { Title: title },
+        booleanNodes: { "Show Back": back, "Show Resource": resource, "Show Settings": settings },
+      });
+    }
+  }
+  return records;
+};
+
+const createBottomNavVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  const navItems = [["Journey", "闯关"], ["Mode", "模式"], ["Collection", "图鉴"], ["Skin", "外观"]] as const;
+  for (const selected of navItems.map(([key]) => key)) {
+    for (const state of ["Default", "Badge", "Disabled"]) {
+      const component = figma.createComponent();
+      component.name = `Selected=${selected}, State=${state}`;
+      component.resize(360, 76);
+      configureAutoLayout(component, "HORIZONTAL");
+      component.primaryAxisSizingMode = "FIXED";
+      component.counterAxisSizingMode = "FIXED";
+      bind(component, "width", v(resources, "GWP / Layout/size/canvas-base-width"));
+      bind(component, "itemSpacing", v(resources, "GWP / Layout/spacing/4"));
+      await applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/surface"), state === "Disabled" ? "Disabled" : "Default", "GWP / Layout/radius/20");
+      const labels: Record<string, TextNode> = {};
+      for (let index = 0; index < navItems.length; index++) {
+        const [key, copy] = navItems[index];
+        const item = figma.createFrame();
+        item.name = `Nav Item/${key}`;
+        item.resize(86, 64);
+        configureAutoLayout(item, "VERTICAL");
+        item.primaryAxisSizingMode = "FIXED";
+        item.counterAxisSizingMode = "FIXED";
+        item.fills = [bindPaint(key === selected ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"))];
+        bind(item, "cornerRadius", v(resources, "GWP / Layout/radius/20"));
+        const navGlyph = key === "Journey" ? "▣" : key === "Mode" ? "≡" : key === "Collection" ? "▦" : "★";
+        const navIcon = await makeText(`Nav Icon/${key}`, navGlyph, resources, { strong: true });
+        item.appendChild(navIcon);
+        const label = await makeText(`Label ${index + 1}`, copy, resources, { strong: key === selected, scale: "micro" });
+        item.appendChild(label);
+        if (state === "Badge" && key === "Mode") {
+          const badge = figma.createEllipse();
+          badge.name = "Badge Dot";
+          badge.resize(8, 8);
+          badge.fills = [bindPaint(v(resources, "GWP / Color Semantics/danger"))];
+          item.appendChild(badge);
+        }
+        component.appendChild(item);
+        item.layoutGrow = 1;
+        labels[`Label ${index + 1}`] = label;
+      }
+      records.push({ component, labels });
+    }
+  }
+  return records;
+};
+
+const createModeCardVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const state of ["Default", "Selected", "Locked", "Completed"]) {
+    const component = figma.createComponent();
+    component.name = `State=${state}`;
+    component.resize(320, 208);
+    configureAutoLayout(component, "VERTICAL");
+    component.primaryAxisSizingMode = "FIXED";
+    component.counterAxisSizingMode = "FIXED";
+    applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+    await applyContainerTokens(component, resources, state === "Selected" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/28");
+    const preview = await createPreviewSlot(component, "Mode Preview", "冲压机模式", 288, 72, resources);
+    const title = await makeText("Title", "自由解压", resources, { strong: true });
+    component.appendChild(title);
+    const description = await makeWrappedText("Description", "选喜欢的东西，想压多久都行，也可以慢慢试出最舒服的力度。", 288, resources, { scale: "caption" });
+    component.appendChild(description);
+    await createStatusText(component, "Record", state === "Locked" ? "完成第 3 关解锁" : state === "Completed" ? "今日已完成" : "已解锁 8 件", resources, state === "Locked" ? "warning" : state === "Completed" ? "success" : "normal");
+    records.push({ component, labels: { Title: title, Description: description }, booleanNodes: { "Show Preview": preview } });
+  }
+  return records;
+};
+
+const createThemeCardVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const state of ["Default", "Selected", "Locked", "Completed"]) {
+    const component = figma.createComponent();
+    component.name = `State=${state}`;
+    component.resize(320, 260);
+    configureAutoLayout(component, "VERTICAL");
+    component.primaryAxisSizingMode = "FIXED";
+    component.counterAxisSizingMode = "FIXED";
+    applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+    await applyContainerTokens(component, resources, state === "Selected" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/28");
+    const preview = await createPreviewSlot(component, "Theme Preview", "桌面工坊主题", 288, 104, resources, state === "Locked" ? v(resources, "GWP / Color Semantics/disabled") : v(resources, "GWP / Color Semantics/accent"));
+    const title = await makeText("Title", "桌面乱成团", resources, { strong: true });
+    component.appendChild(title);
+    const progress = appendVariantInstance(component, base, "GWP/A-Progress", `Kind=Linear, State=${state === "Completed" ? "Completed" : "Default"}`, "Theme Progress");
+    progress.resize(288, 48);
+    setInstanceProperty(progress, "Label", state === "Locked" ? "0/45" : state === "Completed" ? "45/45" : "9/45");
+    await createStatusText(component, "Theme Status", state === "Locked" ? "再获得 21 星解锁" : state === "Completed" ? "15/15 · 结尾已解锁" : "4/15 关", resources, state === "Locked" ? "warning" : state === "Completed" ? "success" : "normal");
+    records.push({ component, labels: { Title: title }, booleanNodes: { "Show Preview": preview } });
+  }
+  return records;
+};
+
+const createLevelCardVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const state of ["Default", "Current", "Locked", "Completed", "Perfect"]) {
+    const component = figma.createComponent();
+    component.name = `State=${state}`;
+    component.resize(112, 152);
+    configureAutoLayout(component, "VERTICAL");
+    component.primaryAxisSizingMode = "FIXED";
+    component.counterAxisSizingMode = "FIXED";
+    applySpacing(component, resources, "GWP / Layout/spacing/12", "GWP / Layout/spacing/12", "GWP / Layout/spacing/4");
+    await applyContainerTokens(component, resources, state === "Current" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+    const preview = await createPreviewSlot(component, "Level Badge", state === "Locked" ? "未知剪影" : "关卡冲压机", 88, 48, resources, state === "Locked" ? v(resources, "GWP / Color Semantics/disabled") : v(resources, "GWP / Color Semantics/accent"));
+    const level = await makeText("Level", "05", resources, { strong: true });
+    component.appendChild(level);
+    const stars = await makeText("Stars", state === "Perfect" ? "★★★" : state === "Completed" ? "★★☆" : "☆☆☆", resources, { strong: true, scale: "caption" });
+    component.appendChild(stars);
+    await createStatusText(component, "Level Status", state === "Locked" ? "再得 3 星" : state === "Current" ? "当前" : state === "Perfect" ? "已压到极致" : state === "Completed" ? "已完成" : "可开始", resources, state === "Locked" ? "warning" : state === "Completed" || state === "Perfect" ? "success" : "normal");
+    const reward = figma.createEllipse();
+    reward.name = "Reward Hint";
+    reward.resize(10, 10);
+    reward.fills = [bindPaint(v(resources, "GWP / Color Semantics/danger"))];
+    reward.visible = state === "Current";
+    component.appendChild(reward);
+    records.push({ component, labels: { Level: level }, booleanNodes: { "Show Preview": preview, "Show Reward": reward } });
+  }
+  return records;
+};
+
+const createCollectionCellVariants = async (_base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const state of ["Unknown", "Discovered", "Partial", "Completed"]) {
+    const component = figma.createComponent();
+    component.name = `State=${state}`;
+    component.resize(104, 160);
+    configureAutoLayout(component, "VERTICAL");
+    component.primaryAxisSizingMode = "FIXED";
+    component.counterAxisSizingMode = "FIXED";
+    applySpacing(component, resources, "GWP / Layout/spacing/8", "GWP / Layout/spacing/8", "GWP / Layout/spacing/4");
+    await applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+    const preview = await createPreviewSlot(component, "Item Thumbnail", state === "Unknown" ? "未知剪影" : "纸箱物品", 80, 80, resources, state === "Unknown" ? v(resources, "GWP / Color Semantics/disabled") : v(resources, "GWP / Color Semantics/accent"));
+    const name = await makeWrappedText("Name", state === "Unknown" ? "未发现" : "震动闹钟", 88, resources, { strong: true, scale: "micro" });
+    component.appendChild(name);
+    const count = state === "Unknown" ? 0 : state === "Discovered" ? 1 : state === "Partial" ? 2 : 3;
+    const progress = await makeText("Result Progress", `${"●".repeat(count)}${"○".repeat(3 - count)} ${count}/3`, resources, { strong: state === "Completed", scale: "micro" });
+    component.appendChild(progress);
+    records.push({ component, labels: state === "Unknown" ? undefined : { Name: name }, booleanNodes: { "Show Thumbnail": preview } });
+  }
+  return records;
+};
+
+const createItemDetailCardVariants = async (_base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const result of ["Perfect", "Under", "Over"]) {
+    for (const state of ["Default", "Empty"]) {
+      const component = figma.createComponent();
+      component.name = `Result=${result}, State=${state}`;
+      component.resize(320, 304);
+      configureAutoLayout(component, "VERTICAL");
+      component.primaryAxisSizingMode = "FIXED";
+      component.counterAxisSizingMode = "FIXED";
+      applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+      await applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/28");
+      const preview = await createPreviewSlot(component, "Item Detail Preview", state === "Empty" ? "结果剪影" : "橡皮鸭物品", 288, 112, resources, state === "Empty" ? v(resources, "GWP / Color Semantics/disabled") : v(resources, "GWP / Color Semantics/accent"));
+      const title = await makeText("Title", state === "Empty" ? "还没见过这个结果" : "震动闹钟", resources, { strong: true });
+      component.appendChild(title);
+      const material = await makeWrappedText("Material", state === "Empty" ? "在第 5 关试试更早松手" : "脆性 · 一开始很硬，突然就碎，还会蹦出几颗小零件。", 288, resources, { scale: "caption" });
+      component.appendChild(material);
+      const resultName = result === "Perfect" ? "完美" : result === "Under" ? "欠压" : "过压";
+      await createStatusText(component, "Result Name", resultName, resources, result === "Perfect" ? "success" : result === "Over" ? "danger" : "warning");
+      const stats = state === "Empty" ? "发现 0 次 · 最佳 0 分" : result === "Over" ? "按压 999 次 · 最佳 99,999 分" : "发现 12 次 · 最佳 8,460 分";
+      await createStatusText(component, "Stats", stats, resources);
+      records.push({ component, labels: state === "Default" ? { Title: title, Material: material } : undefined, booleanNodes: { "Show Preview": preview } });
+    }
+  }
+  return records;
+};
+
+const createSkinCardVariants = async (_base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const state of ["Locked", "Unlockable", "Selected", "Applied"]) {
+    const component = figma.createComponent();
+    component.name = `State=${state}`;
+    component.resize(160, 224);
+    configureAutoLayout(component, "VERTICAL");
+    component.primaryAxisSizingMode = "FIXED";
+    component.counterAxisSizingMode = "FIXED";
+    applySpacing(component, resources, "GWP / Layout/spacing/12", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+    await applyContainerTokens(component, resources, state === "Selected" || state === "Applied" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+    const preview = await createPreviewSlot(component, "Skin Preview", state === "Locked" ? "外观剪影" : "薄荷机器外观", 136, 104, resources, state === "Locked" ? v(resources, "GWP / Color Semantics/disabled") : v(resources, "GWP / Color Semantics/accent"));
+    const title = await makeWrappedText("Title", "薄荷冲压机", 136, resources, { strong: true, scale: "caption" });
+    component.appendChild(title);
+    const status = state === "Locked" ? "完成“奇怪解压所”第 15 关解锁" : state === "Unlockable" ? "可解锁" : state === "Selected" ? "已选中" : "使用中";
+    const statusText = await makeWrappedText("Skin Status", status, 136, resources, { strong: state !== "Locked", scale: "micro" });
+    component.appendChild(statusText);
+    records.push({ component, labels: { Title: title }, booleanNodes: { "Show Preview": preview } });
+  }
+  return records;
+};
+
+const createRewardCardVariants = async (_base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  const copies: Record<string, string> = { Reward: "获得 2 星", Item: "震动闹钟", Theme: "厨房别炸锅", Skin: "薄荷冲压机" };
+  const artLabels: Record<string, string> = { Reward: "奖励礼盒", Item: "纸箱物品", Theme: "桌面工坊主题", Skin: "薄荷机器外观" };
+  for (const kind of ["Reward", "Item", "Theme", "Skin"]) {
+    for (const state of ["Granted", "Claimed"]) {
+      const component = figma.createComponent();
+      component.name = `Kind=${kind}, State=${state}`;
+      component.resize(160, 192);
+      configureAutoLayout(component, "VERTICAL");
+      component.primaryAxisSizingMode = "FIXED";
+      component.counterAxisSizingMode = "FIXED";
+      applySpacing(component, resources, "GWP / Layout/spacing/12", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+      await applyContainerTokens(component, resources, state === "Granted" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+      const preview = await createPreviewSlot(component, "Reward Art", artLabels[kind], 136, 88, resources);
+      const title = await makeWrappedText("Title", copies[kind], 136, resources, { strong: true, scale: "caption" });
+      component.appendChild(title);
+      await createStatusText(component, "Reward Status", state === "Granted" ? "新获得" : "已收下", resources, state === "Granted" ? "success" : "normal");
+      records.push({ component, booleanNodes: { "Show Reward Art": preview } });
+    }
+  }
+  return records;
+};
+
+const createUnlockPanelVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  const componentsFrame = base.parent;
+  if (!componentsFrame || componentsFrame.type !== "FRAME") throw new Error("Content frame has no 02_Components parent");
+  for (const kind of ["Item", "Theme", "Skin"]) {
+    for (const state of ["Revealing", "Ready"]) {
+      const component = figma.createComponent();
+      component.name = `Kind=${kind}, State=${state}`;
+      component.resize(320, 272);
+      configureAutoLayout(component, "VERTICAL");
+      component.primaryAxisSizingMode = "FIXED";
+      component.counterAxisSizingMode = "FIXED";
+      applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/16", "GWP / Layout/spacing/8");
+      await applyContainerTokens(component, resources, v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/28");
+      const title = await makeText("Title", state === "Revealing" ? "正在拆开奖励…" : "解锁新东西！", resources, { strong: true });
+      component.appendChild(title);
+      const rewardSet = findComponentSet(componentsFrame, "GWP/C-RewardCard");
+      const rewardVariant = rewardSet.children.find((child) => child.type === "COMPONENT" && child.name === `Kind=${kind}, State=Granted`);
+      if (!rewardVariant || rewardVariant.type !== "COMPONENT") throw new Error(`Reward variant missing for ${kind}`);
+      const reward = rewardVariant.createInstance();
+      reward.name = "Reward Card";
+      component.appendChild(reward);
+      const description = await makeWrappedText("Description", kind === "Item" ? "震动闹钟加入烦恼图鉴" : kind === "Theme" ? "厨房别炸锅开门了" : "薄荷冲压机已解锁", 288, resources, { scale: "caption" });
+      component.appendChild(description);
+      const action = appendVariantInstance(component, base, "GWP/A-Button", "Role=Primary, Size=M, State=Default", "Primary Action");
+      setInstanceProperty(action, "Label", state === "Ready" ? "收下" : "处理中…");
+      records.push({ component, labels: { Title: title }, booleanNodes: { "Show Reward": reward } });
+    }
+  }
+  return records;
+};
+
+const createAchievementCardVariants = async (base: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const records: VariantRecord[] = [];
+  for (const state of ["Pending", "InProgress", "Completed", "Claimed"]) {
+    const component = figma.createComponent();
+    component.name = `State=${state}`;
+    component.resize(320, 220);
+    configureAutoLayout(component, "VERTICAL");
+    component.primaryAxisSizingMode = "FIXED";
+    component.counterAxisSizingMode = "FIXED";
+    applySpacing(component, resources, "GWP / Layout/spacing/16", "GWP / Layout/spacing/12", "GWP / Layout/spacing/8");
+    await applyContainerTokens(component, resources, state === "Completed" ? v(resources, "GWP / Color Semantics/brand") : v(resources, "GWP / Color Semantics/surface"), "Default", "GWP / Layout/radius/20");
+    const header = figma.createFrame();
+    header.name = "Achievement Header";
+    header.resize(288, 72);
+    configureAutoLayout(header, "HORIZONTAL");
+    header.primaryAxisSizingMode = "FIXED";
+    header.counterAxisSizingMode = "FIXED";
+    bind(header, "itemSpacing", v(resources, "GWP / Layout/spacing/12"));
+    header.fills = [];
+    component.appendChild(header);
+    const badge = await createPreviewSlot(header, "Achievement Badge", "奖励星徽", 72, 72, resources);
+    const copy = figma.createFrame();
+    copy.name = "Achievement Copy";
+    copy.resize(204, 72);
+    configureAutoLayout(copy, "VERTICAL");
+    copy.primaryAxisSizingMode = "FIXED";
+    copy.counterAxisSizingMode = "FIXED";
+    bind(copy, "itemSpacing", v(resources, "GWP / Layout/spacing/4"));
+    copy.fills = [];
+    header.appendChild(copy);
+    const title = await makeText("Title", "弹回来三次", resources, { strong: true });
+    copy.appendChild(title);
+    const description = await makeWrappedText("Description", "连续让 3 件弹性物品欠压回弹，看看它们能不能自己站起来。", 204, resources, { scale: "caption" });
+    copy.appendChild(description);
+    const progressState = state === "Completed" || state === "Claimed" ? "Completed" : "Default";
+    const progress = appendVariantInstance(component, base, "GWP/A-Progress", `Kind=Linear, State=${progressState}`, "Achievement Progress");
+    progress.resize(288, 48);
+    setInstanceProperty(progress, "Label", state === "Pending" ? "0/3" : state === "InProgress" ? "2/3" : "3/3");
+    await createStatusText(component, "Achievement Status", state === "Pending" ? "未完成" : state === "InProgress" ? "进行中" : state === "Completed" ? "收下奖励" : "已领取", resources, state === "Completed" ? "success" : "normal");
+    records.push({ component, labels: { Title: title, Description: description }, booleanNodes: { "Show Badge": badge } });
+  }
+  return records;
+};
+
+const contentFamilyConfig: Record<string, { setName: string; title: string; description: string; usage: string; columns: number; creator: Function }> = {
+  TopBar: { setName: "GWP/C-TopBar", title: "TopBar", description: "Home/Page 上下文与 Default、Scrolled、Offline 状态，组合返回、标题、资源与设置入口。", usage: "用于非游戏页顶部导航；禁止覆盖平台胶囊与安全区。", columns: 3, creator: createTopBarVariants },
+  BottomNav: { setName: "GWP/C-BottomNav", title: "BottomNav", description: "闯关、模式、图鉴、外观四项主导航，覆盖选中、红点与禁用。", usage: "只用于四个主导航根页；游戏中与详情页不得常驻。", columns: 3, creator: createBottomNavVariants },
+  ModeCard: { setName: "GWP/C-ModeCard", title: "ModeCard", description: "模式插画、规则、记录与 Default、Selected、Locked、Completed。", usage: "用于模式选择；规则最多两行，锁定必须给出可验证条件。", columns: 4, creator: createModeCardVariants },
+  ThemeCard: { setName: "GWP/C-ThemeCard", title: "ThemeCard", description: "主题背景预览、进度、锁定、选中与完成。", usage: "用于主题切换；背景只承载视觉，不烘焙标题和星数。", columns: 4, creator: createThemeCardVariants },
+  LevelCard: { setName: "GWP/C-LevelCard", title: "LevelCard", description: "关号、0–3 星、当前、锁定、完成、Perfect 与奖励提示。", usage: "用于 15 关网格；锁定卡不可触发开始动作。", columns: 5, creator: createLevelCardVariants },
+  CollectionCell: { setName: "GWP/C-CollectionCell", title: "CollectionCell", description: "未知、已发现、三结果进度与完成图鉴格。", usage: "缩略图不含名称文字；未知态只展示剪影与 0/3。", columns: 4, creator: createCollectionCellVariants },
+  ItemDetailCard: { setName: "GWP/C-ItemDetailCard", title: "ItemDetailCard", description: "物品大图、材质说明、完美/欠压/过压与 0/最大统计。", usage: "文字与统计必须是可编辑层；图片失败不能隐藏材质信息。", columns: 3, creator: createItemDetailCardVariants },
+  SkinCard: { setName: "GWP/C-SkinCard", title: "SkinCard", description: "未解锁、可解锁、已选中与已装备外观卡。", usage: "只改变表现；不得出现购买或战力文案。", columns: 4, creator: createSkinCardVariants },
+  RewardCard: { setName: "GWP/C-RewardCard", title: "RewardCard", description: "普通奖励、新物品、新主题与新外观的获得/已领取状态。", usage: "奖励只能展示已经确定的本地结果，不重复发放。", columns: 4, creator: createRewardCardVariants },
+  UnlockPanel: { setName: "GWP/C-UnlockPanel", title: "UnlockPanel", description: "新物品、新主题与新外观的 Revealing/Ready 解锁面板。", usage: "一次只突出一个主要解锁，复用 RewardCard 与基础按钮。", columns: 3, creator: createUnlockPanelVariants },
+  AchievementCard: { setName: "GWP/C-AchievementCard", title: "AchievementCard", description: "未完成、进行中、完成与已领取成就卡。", usage: "条件与进度必须可理解；隐藏成就另由屏幕层决定文案。", columns: 4, creator: createAchievementCardVariants },
+};
+
 const familyConfig: Record<string, { setName: string; title: string; description: string; usage: string; columns: number; creator: Function }> = {
   Button: { setName: "GWP/A-Button", title: "Button", description: "主、次与危险文本按钮，覆盖 M/L 与 Default、Pressed、Disabled、Loading。", usage: "用于明确动作；禁止同一页面出现多个 Primary，也禁止用图片烘焙文字。", columns: 4, creator: createButtonVariants },
   IconButton: { setName: "GWP/A-IconButton", title: "IconButton", description: "44/52 触控热区的普通、强调、返回与关闭按钮。", usage: "Icon 使用 INSTANCE_SWAP；禁止为每个图标建立 variant。", columns: 3, creator: createIconButtonVariants },
@@ -554,6 +1084,71 @@ const wireProperties = (
   } else if (family === "Loading") {
     addTextProperty("Label", "加载中…");
     addBooleanProperty("Show Label", true, (r) => r.labels?.Label);
+  }
+  return propertyKeys;
+};
+
+const wireContentProperties = (
+  set: ComponentSetNode,
+  records: VariantRecord[],
+  family: string,
+) => {
+  const propertyKeys: Record<string, string> = {};
+  const addTextProperty = (property: string, fallback: string, selector: (record: VariantRecord) => TextNode | undefined) => {
+    const key = set.addComponentProperty(property, "TEXT", fallback);
+    propertyKeys[property] = key;
+    for (const record of records) {
+      const node = selector(record);
+      if (node) node.componentPropertyReferences = { ...(node.componentPropertyReferences ?? {}), characters: key };
+    }
+  };
+  const addBooleanProperty = (property: string, fallback: boolean, selector: (record: VariantRecord) => SceneNode | undefined) => {
+    const key = set.addComponentProperty(property, "BOOLEAN", fallback);
+    propertyKeys[property] = key;
+    for (const record of records) {
+      const node = selector(record);
+      if (node) node.componentPropertyReferences = { ...(node.componentPropertyReferences ?? {}), visible: key };
+    }
+  };
+
+  if (family === "TopBar") {
+    addTextProperty("Title", "主题工坊", (record) => /Context=Page/.test(record.component.name) ? record.labels?.Title : undefined);
+    addBooleanProperty("Show Back", false, (record) => /Context=Home/.test(record.component.name) ? record.booleanNodes?.["Show Back"] : undefined);
+    addBooleanProperty("Show Resource", true, (record) => record.booleanNodes?.["Show Resource"]);
+    addBooleanProperty("Show Settings", true, (record) => record.booleanNodes?.["Show Settings"]);
+  } else if (family === "BottomNav") {
+    addTextProperty("Journey Label", "闯关", (record) => record.labels?.["Label 1"]);
+    addTextProperty("Mode Label", "模式", (record) => record.labels?.["Label 2"]);
+    addTextProperty("Collection Label", "图鉴", (record) => record.labels?.["Label 3"]);
+    addTextProperty("Skin Label", "外观", (record) => record.labels?.["Label 4"]);
+  } else if (family === "ModeCard") {
+    addTextProperty("Title", "自由解压", (record) => record.labels?.Title);
+    addTextProperty("Description", "选喜欢的东西，想压多久都行，也可以慢慢试出最舒服的力度。", (record) => record.labels?.Description);
+    addBooleanProperty("Show Preview", true, (record) => record.booleanNodes?.["Show Preview"]);
+  } else if (family === "ThemeCard") {
+    addTextProperty("Title", "桌面乱成团", (record) => record.labels?.Title);
+    addBooleanProperty("Show Preview", true, (record) => record.booleanNodes?.["Show Preview"]);
+  } else if (family === "LevelCard") {
+    addTextProperty("Level", "05", (record) => record.labels?.Level);
+    addBooleanProperty("Show Reward", false, (record) => /State=Current/.test(record.component.name) ? undefined : record.booleanNodes?.["Show Reward"]);
+  } else if (family === "CollectionCell") {
+    addTextProperty("Name", "震动闹钟", (record) => record.labels?.Name);
+    addBooleanProperty("Show Thumbnail", true, (record) => record.booleanNodes?.["Show Thumbnail"]);
+  } else if (family === "ItemDetailCard") {
+    addTextProperty("Title", "震动闹钟", (record) => record.labels?.Title);
+    addTextProperty("Material", "脆性 · 一开始很硬，突然就碎，还会蹦出几颗小零件。", (record) => record.labels?.Material);
+    addBooleanProperty("Show Preview", true, (record) => record.booleanNodes?.["Show Preview"]);
+  } else if (family === "SkinCard") {
+    addTextProperty("Title", "薄荷冲压机", (record) => record.labels?.Title);
+    addBooleanProperty("Show Preview", true, (record) => record.booleanNodes?.["Show Preview"]);
+  } else if (family === "RewardCard") {
+    addBooleanProperty("Show Reward Art", true, (record) => record.booleanNodes?.["Show Reward Art"]);
+  } else if (family === "UnlockPanel") {
+    addTextProperty("Title", "解锁新东西！", (record) => /State=Ready/.test(record.component.name) ? record.labels?.Title : undefined);
+    addBooleanProperty("Show Reward", true, (record) => record.booleanNodes?.["Show Reward"]);
+  } else if (family === "AchievementCard") {
+    addTextProperty("Title", "弹回来三次", (record) => record.labels?.Title);
+    addTextProperty("Description", "连续让 3 件弹性物品欠压回弹，看看它们能不能自己站起来。", (record) => record.labels?.Description);
   }
   return propertyKeys;
 };
@@ -754,6 +1349,137 @@ const auditSet = async (set: ComponentSetNode) => {
     autoLayoutFailures,
     opacityBindings,
     bounds: getBounds(set),
+  };
+};
+
+const syncComponentsLayout = (componentsFrame: FrameNode, content: FrameNode) => {
+  componentsFrame.resizeWithoutConstraints(6080, content.y + content.height + 120);
+  const section = componentsFrame.parent;
+  const mutatedNodeIds: string[] = [componentsFrame.id, content.id];
+  if (section?.type === "SECTION") {
+    const firstRowY = componentsFrame.y + componentsFrame.height + 320;
+    const positions: Record<string, [number, number]> = {
+      "03_User_Flows": [160, firstRowY],
+      "04_Core_Screens": [3280, firstRowY],
+      "05_Modes_And_Collection": [160, firstRowY + 960],
+      "06_Overlays_And_States": [3280, firstRowY + 960],
+      "07_Prototype": [160, firstRowY + 1920],
+      "08_Dev_Handoff": [3280, firstRowY + 1920],
+      "99_Archive": [160, firstRowY + 2880],
+    };
+    for (const child of section.children) {
+      const target = positions[child.name];
+      if (target && "x" in child) {
+        child.x = target[0];
+        child.y = target[1];
+        mutatedNodeIds.push(child.id);
+      }
+    }
+    section.resizeWithoutConstraints(6400, firstRowY + 4060);
+    mutatedNodeIds.push(section.id);
+  }
+  return mutatedNodeIds;
+};
+
+const prepareContent = async (componentsFrame: FrameNode, resources: Awaited<ReturnType<typeof loadGwpResources>>) => {
+  const base = componentsFrame.findOne((node) => node.type === "FRAME" && node.name === "02_Components/Base");
+  if (!base || base.type !== "FRAME") throw new Error("02_Components/Base is required before Content");
+  let content = componentsFrame.findOne((node) => node.type === "FRAME" && node.name === "02_Components/Content") as FrameNode | null;
+  const createdNodeIds: string[] = [];
+  if (!content) {
+    content = figma.createFrame();
+    content.name = "02_Components/Content";
+    content.resize(5840, 800);
+    content.x = 120;
+    content.y = base.y + base.height + 120;
+    content.fills = [bindPaint(v(resources, "GWP / Color Semantics/surface"))];
+    content.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+    bind(content, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
+    bind(content, "cornerRadius", v(resources, "GWP / Layout/radius/28"));
+    const raised = resources.effects.get("GWP/Effect/Surface/Raised");
+    if (!raised) throw new Error("Missing GWP/Effect/Surface/Raised");
+    await content.setEffectStyleIdAsync(raised.id);
+    componentsFrame.appendChild(content);
+    createdNodeIds.push(content.id);
+  }
+  const subtitle = componentsFrame.findOne((node) => node.type === "TEXT" && node.name === "placeholder/02_Components/subtitle") as TextNode | null;
+  if (subtitle) {
+    await figma.loadFontAsync(typeof subtitle.fontName === "symbol" ? { family: "Noto Sans SC", style: "Regular" } : subtitle.fontName);
+    subtitle.characters = "GWP-015/016 · Base, navigation and content components · 逐个创建、验证与截图";
+  }
+  const mutatedNodeIds = syncComponentsLayout(componentsFrame, content);
+  if (subtitle) mutatedNodeIds.push(subtitle.id);
+  figma.commitUndo();
+  return { contentId: content.id, baseId: base.id, createdNodeIds, mutatedNodeIds };
+};
+
+const buildContentFamily = async (
+  content: FrameNode,
+  family: string,
+  resources: Awaited<ReturnType<typeof loadGwpResources>>,
+) => {
+  const config = contentFamilyConfig[family];
+  if (!config) throw new Error(`Unsupported GWP content family: ${family}`);
+  const existing = content.findOne((node) => node.type === "COMPONENT_SET" && node.name === config.setName) as ComponentSetNode | null;
+  if (existing) return { skipped: true, family, componentSetId: existing.id, createdNodeIds: [], mutatedNodeIds: [], audit: await auditSet(existing) };
+  const componentsFrame = content.parent;
+  if (!componentsFrame || componentsFrame.type !== "FRAME" || componentsFrame.name !== "02_Components") throw new Error("Content must be inside 02_Components");
+  const base = componentsFrame.findOne((node) => node.type === "FRAME" && node.name === "02_Components/Base");
+  if (!base || base.type !== "FRAME") throw new Error("02_Components/Base is required for reuse");
+  const docs = content.children.filter((node) => node.type === "FRAME" && node.name.startsWith("Content/")) as FrameNode[];
+  const nextY = docs.length ? Math.max(...docs.map((frame) => frame.y + frame.height)) + 80 : 120;
+  const doc = figma.createFrame();
+  doc.name = `Content/${config.title}`;
+  doc.resize(5640, 700);
+  doc.x = 100;
+  doc.y = nextY;
+  doc.fills = [bindPaint(v(resources, "GWP / Color Primitives/white/0"))];
+  doc.strokes = [bindPaint(v(resources, "GWP / Color Semantics/text/primary"))];
+  bind(doc, "strokeWeight", v(resources, "GWP / Layout/stroke/control"));
+  bind(doc, "cornerRadius", v(resources, "GWP / Layout/radius/20"));
+  content.appendChild(doc);
+  const docTextIds = await addDocumentation(doc, config, resources);
+  const records: VariantRecord[] = await config.creator(base, resources);
+  const components = records.map((record) => record.component);
+  const set = figma.combineAsVariants(components, doc);
+  set.name = config.setName;
+  set.description = `${config.description} ${config.usage}`;
+  set.fills = [];
+  set.strokes = [];
+  const maxWidth = Math.max(...components.map((component) => component.width));
+  const maxHeight = Math.max(...components.map((component) => component.height));
+  const cellWidth = maxWidth + 48;
+  const cellHeight = maxHeight + 40;
+  components.forEach((component, index) => {
+    component.x = 40 + (index % config.columns) * cellWidth;
+    component.y = 40 + Math.floor(index / config.columns) * cellHeight;
+  });
+  const rows = Math.ceil(components.length / config.columns);
+  set.resizeWithoutConstraints(80 + config.columns * cellWidth, 80 + rows * cellHeight);
+  set.x = 100;
+  set.y = 240;
+  const propertyKeys = wireContentProperties(set, records, family);
+  doc.resizeWithoutConstraints(5640, set.y + set.height + 80);
+  content.resizeWithoutConstraints(5840, doc.y + doc.height + 100);
+  const layoutMutations = syncComponentsLayout(componentsFrame, content);
+  figma.commitUndo();
+  const allCreated = [doc.id, ...docTextIds, set.id, ...components.map((component) => component.id)];
+  for (const record of records) {
+    if (record.icon) allCreated.push(record.icon.id);
+    if (record.booleanNode) allCreated.push(record.booleanNode.id);
+    if (record.booleanNodes) allCreated.push(...Object.values(record.booleanNodes).map((node) => node.id));
+    if (record.labels) allCreated.push(...Object.values(record.labels).map((node) => node.id));
+  }
+  return {
+    skipped: false,
+    family,
+    documentationFrameId: doc.id,
+    componentSetId: set.id,
+    variantIds: components.map((component) => component.id),
+    propertyKeys,
+    createdNodeIds: Array.from(new Set(allCreated)),
+    mutatedNodeIds: Array.from(new Set([content.id, componentsFrame.id, ...layoutMutations])),
+    audit: await auditSet(set),
   };
 };
 
@@ -967,6 +1693,11 @@ export const handleWriteComponentRequest = async (request: any): Promise<any> =>
         const result = await prepareBase(node, resources);
         return { type: request.type, requestId: request.requestId, data: { baseId: result.base.id, ...result } };
       }
+      if (envelope.operation === "prepare-content") {
+        if (node.type !== "FRAME" || node.name !== "02_Components") throw new Error("prepare-content must target 02_Components frame");
+        const result = await prepareContent(node, resources);
+        return { type: request.type, requestId: request.requestId, data: result };
+      }
       if (envelope.operation === "capability-probe") {
         if (node.type !== "FRAME" || node.name !== "02_Components/Base") throw new Error("capability-probe must target 02_Components/Base");
         const result = await createCapabilityProbe(node, resources);
@@ -976,6 +1707,12 @@ export const handleWriteComponentRequest = async (request: any): Promise<any> =>
         if (node.type !== "FRAME" || node.name !== "02_Components/Base") throw new Error("build-family must target 02_Components/Base");
         if (!envelope.family) throw new Error("family is required");
         const result = await buildFamily(node, envelope.family, resources);
+        return { type: request.type, requestId: request.requestId, data: result };
+      }
+      if (envelope.operation === "build-content-family") {
+        if (node.type !== "FRAME" || node.name !== "02_Components/Content") throw new Error("build-content-family must target 02_Components/Content");
+        if (!envelope.family) throw new Error("family is required");
+        const result = await buildContentFamily(node, envelope.family, resources);
         return { type: request.type, requestId: request.requestId, data: result };
       }
       if (envelope.operation === "repair-family-presets") {

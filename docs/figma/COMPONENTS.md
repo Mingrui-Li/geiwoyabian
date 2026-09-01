@@ -1,4 +1,6 @@
-# GWP 基础交互组件
+# GWP 组件接口
+
+## 基础交互组件（GWP-015）
 
 本文件记录 `GWP_给我压扁 / 02_Components / Base` 在 GWP-015 冻结的基础组件接口。Figma 文件 `mini-game` 是视觉源，节点 ID 与截图用于后续屏幕设计和 Dev Handoff 精确定位。
 
@@ -45,3 +47,47 @@
 - [Loading](./screenshots/gwp-015-a-loading.png)
 
 最终节点扫描结果为 15 个 `GWP/` 命名节点：7 个 Component Set 与 8 个内部 Component；页面仍为原 8 个 Section 加 `GWP_给我压扁`，Section 外 ID 和边界未变化。
+
+## 导航与内容组件（GWP-016）
+
+GWP-016 严格执行“gpt-image-2视觉输入 → Figma原生重建”的顺序。无文字组件视觉板先生成并导入 `02_Components/Content` 的 `Content/Image-2 Reference v02`，随后才建立正式组件。Image-2只提供造型、配色和材质锚点；标题、状态、布局、变量与交互属性全部保留为Figma原生可编辑结构。
+
+### 冻结矩阵
+
+| 组件 | Figma ID | Variant 矩阵 | 数量 | 公开属性与状态验证 | 使用与禁止场景 |
+|---|---|---|---:|---|---|
+| `GWP/C-TopBar` | `355:2882` | Context `Home/Page` × State `Default/Scrolled/Offline` | 6 | `Title`、`Show Back/Resource/Settings`；断网胶囊同时使用图形与文字 | 非游戏页顶部导航；不得覆盖平台胶囊和安全区。 |
+| `GWP/C-BottomNav` | `355:2009` | Selected `Journey/Mode/Collection/Skin` × State `Default/Badge/Disabled` | 12 | 四项标签、选中、红点与禁用 | 仅四个主导航根页；详情页和游戏中不常驻。 |
+| `GWP/C-ModeCard` | `355:2062` | State `Default/Selected/Locked/Completed` | 4 | `Title`、`Description`、`Show Preview`；验证两行长中文 | 模式选择；锁定必须显示可验证条件。 |
+| `GWP/C-ThemeCard` | `355:2127` | State `Default/Selected/Locked/Completed` | 4 | 主题预览与 `0/45`、`9/45`、`45/45` 进度 | 主题选择；背景预览不得烘焙标题与星数。 |
+| `GWP/C-LevelCard` | `355:2670` | State `Default/Current/Locked/Completed/Perfect` | 5 | `Level`、`Show Reward`；0–3星、奖励提示和锁定条件 | 15关网格；Locked不可触发开始动作。 |
+| `GWP/C-CollectionCell` | `355:2194` | State `Unknown/Discovered/Partial/Completed` | 4 | `Name`、`Show Thumbnail`；剪影与 `0/3`–`3/3` | 图鉴网格；未知态不暴露名称或真实缩略图。 |
+| `GWP/C-ItemDetailCard` | `355:2738` | Result `Perfect/Under/Over` × State `Default/Empty` | 6 | `Title`、`Material`、`Show Preview`；长中文、0、999、99,999与空态 | 图鉴详情；三类结果必须保留文字语义。 |
+| `GWP/C-SkinCard` | `355:2308` | State `Locked/Unlockable/Selected/Applied` | 4 | `Title`、`Show Preview`；解锁条件与使用中状态 | 外观选择；Selected与Applied不得混为同一动作。 |
+| `GWP/C-RewardCard` | `355:2393` | Kind `Reward/Item/Theme/Skin` × State `Granted/Claimed` | 8 | `Show Reward Art`；四类奖励使用不同可编辑插画 | 奖励结果；不得重复发放已领取内容。 |
+| `GWP/C-UnlockPanel` | `355:2500` | Kind `Item/Theme/Skin` × State `Revealing/Ready` | 6 | `Title`、`Show Reward`；内部复用RewardCard实例 | 新内容揭示；Revealing状态不可执行收下动作。 |
+| `GWP/C-AchievementCard` | `355:2811` | State `Pending/InProgress/Completed/Claimed` | 4 | `Title`、`Description`；徽章、长中文和 `0/3`–`3/3` | 成就列表；Completed与Claimed必须明显区分。 |
+
+合计 11 个 Component Set、63 个受控 Variant。全部根节点使用 Auto Layout，颜色、间距、圆角、描边、字体、尺寸和状态透明度复用 GWP Foundations；逐组构建审计没有发现硬编码 Paint 或根节点 Auto Layout 失败。
+
+### 视觉与内容约束
+
+- 组件视觉延续GWP-012批准的充气贴纸工坊：奶油白表面、工业黄、薄荷绿、深墨蓝外框与抬升阴影；禁止退回几何圆点占位图。
+- 机器、工坊、纸箱、橡皮鸭、礼盒、未知剪影和成就徽章均为Figma原生分层图形，可替换、缩放和继续精修；Image-2参考图不承载最终文字或交互状态。
+- 颜色之外始终保留中文状态、图形或星级区别；断网、锁定、空态、完成和已领取不能只靠颜色表达。
+- 正式屏幕组装仍由GWP-018至GWP-021执行；这些组件不得被当作已经冻结的完整页面。
+
+### 验证证据
+
+- [gpt-image-2组件视觉板](../../design/wip/gwp-016-content-components/component-board-v02.png)
+- [TopBar](../../design/wip/gwp-016-content-components/figma-topbar-set-v04.png)
+- [BottomNav](../../design/wip/gwp-016-content-components/figma-bottom-nav-set-v02.png)
+- [ModeCard](../../design/wip/gwp-016-content-components/figma-mode-card-set-v02.png)
+- [ThemeCard](../../design/wip/gwp-016-content-components/figma-theme-card-set-v02.png)
+- [LevelCard](../../design/wip/gwp-016-content-components/figma-level-card-set-v03.png)
+- [CollectionCell](../../design/wip/gwp-016-content-components/figma-collection-cell-set-v02.png)
+- [ItemDetailCard](../../design/wip/gwp-016-content-components/figma-item-detail-set-v03.png)
+- [SkinCard](../../design/wip/gwp-016-content-components/figma-skin-card-set-v02.png)
+- [RewardCard](../../design/wip/gwp-016-content-components/figma-reward-card-set-v02.png)
+- [UnlockPanel](../../design/wip/gwp-016-content-components/figma-unlock-panel-set-v02.png)
+- [AchievementCard](../../design/wip/gwp-016-content-components/figma-achievement-card-set-v03.png)
