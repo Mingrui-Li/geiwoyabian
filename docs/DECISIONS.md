@@ -47,7 +47,7 @@
 ## D-007：多窗口滚动拆解
 
 - 日期：2026-08-27
-- 状态：ACCEPTED
+- 状态：SUPERSEDED（由D-018的跨对话大工作流替代）
 - 决策：路线图保留长期方向，只细化当前与下一阶段；新窗口通过START_HERE、STATUS和独立任务卡继续工作。
 - 影响：不依赖聊天上下文，不提前创建大量会过期的细任务。
 
@@ -61,7 +61,7 @@
 ## D-009：Figma完整设计前置于所有Cocos工作
 
 - 日期：2026-08-27
-- 状态：ACCEPTED
+- 状态：SUPERSEDED（设计先行原则保留，具体门禁由D-018替代）
 - 决策：先完成D0界面规格、gpt-image-2视觉基准、Figma设计系统、24类正式界面、全部状态、三尺寸适配、可点击原型和Dev Handoff；`GWP-026`设计冻结后才允许开始或合入Cocos工作。
 - 影响：旧的`GWP-001`至`GWP-008`工程优先链被取消。已完成但未合入的Cocos初始化分支保留隔离，设计冻结后可作为新工程任务的参考，不能提前合入`main`。
 
@@ -75,7 +75,7 @@
 ## D-011：锁定24类屏幕与四项主导航
 
 - 日期：2026-08-27
-- 状态：ACCEPTED
+- 状态：SUPERSEDED（四项主导航继续有效；24张独立画板要求由D-018取消）
 - 决策：v1.0正式UI范围锁定为`SCREEN_SPEC.md`中的24类屏幕；常驻主导航固定为“闯关 / 模式 / 图鉴 / 外观”，设置与成就使用页面级入口，不新增商城、个人中心、排行榜或社交页。
 - 影响：后续Figma信息架构、组件覆盖、可点击原型和Cocos导航必须使用相同屏幕编号与入口关系；新增独立屏幕必须先更新规格和决策日志。
 
@@ -110,7 +110,7 @@
 ## D-016：任务采用单一执行窗口闭环
 
 - 日期：2026-08-31
-- 状态：ACCEPTED
+- 状态：SUPERSEDED（无独立审阅原则保留；工作流改为可跨多个对话）
 - 决策：从GWP-015开始取消“执行窗口完成后进入REVIEW、再由独立集成窗口审阅”的双窗口模式。认领任务的同一执行窗口负责实现、真实环境验收、修复、合并自己的任务分支、更新公共状态、标记DONE并解锁紧邻后续任务。
 - 影响：任务生命周期改为`BLOCKED → READY → IN_PROGRESS → DONE`（失败时可回到`BLOCKED`）；不再创建单独审阅集成对话。验收标准不降低，执行窗口必须独立读取真实Figma/运行构建或测试，不能只采信自己的完成记录。`AGENTS.md`、`START_HERE.md`、`DEVELOPMENT_WORKFLOW.md`和任务模板已同步。
 
@@ -120,3 +120,10 @@
 - 状态：ACCEPTED
 - 决策：v1基础交互层固定为Button、IconButton、SegmentedControl、StatusPill、Progress、Toast/InlineMessage与Loading七个Component Set，共102个受控Variant，并以8个内部图标Component提供实例复用。TEXT、BOOLEAN和INSTANCE_SWAP只暴露可安全定制的节点；Danger、Loading、Error、Offline、Locked、Completed等状态保留语义文案和图标预设，不允许公共默认值覆盖。Disabled与Locked使用`surface`容器配合Foundation opacity token，保持状态弱化与文字可读同时成立。
 - 影响：GWP-016及后续Figma任务必须优先组合这些精确组件ID，不复制近似Frame或重新建立基础状态矩阵。仓库伴生插件已扩展组件创建、属性连接、语义预设与审计能力，后续仍须运行`docs/figma/tooling/figma-mcp-rust-gwp014/`中的唯一命名开发插件。
+
+## D-018：剩余开发压缩为UI与代码两个工作流
+
+- 日期：2026-09-01
+- 状态：ACCEPTED
+- 决策：停止按组件、流程、屏幕、适配、原型、审计和交接拆任务。剩余工作只保留`GWP-017`完整Figma UI与`GWP-030`完整Cocos开发两个工作流；每个工作流可以跨多个对话持续推进。`GWP-018`至`GWP-026`并入GWP-017，`GWP-031`至`GWP-037`并入GWP-030。
+- 影响：旧24类规格只作防遗漏参考，不要求24张独立画板；不再要求逐组件截图、逐节点metadata、重复SHA证明或单独Dev Handoff任务。Figma完整UI仍先于Cocos，用户确认GWP-017后直接进入GWP-030。产品完整v1.0范围和永久排除项不变。

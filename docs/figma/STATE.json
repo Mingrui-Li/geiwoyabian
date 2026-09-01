@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "runId": "gwp-016-20260901-01",
-  "taskId": "GWP-016",
-  "branch": "codex/gwp-016-content-components",
-  "integratedInto": "main",
-  "phase": "phase3-complete",
-  "step": "gwp-016-integrated",
+  "runId": "gwp-017-20260901-01",
+  "taskId": "GWP-017",
+  "branch": "codex/gwp-017-gameplay-components",
+  "integratedInto": null,
+  "phase": "complete-ui-in-progress",
+  "step": "assemble-player-facing-screens",
   "file": {
     "name": "mini-game",
     "key": "83pqrCcig644vC20QXM5G1",
@@ -545,8 +545,8 @@
     "GWP-016-visual-qa"
   ],
   "pending": [
-    "GWP-017 is READY after GWP-016 main integration",
-    "Optional audit: use remote component search only if a future figma-mcp-rust version exposes it; official Figma MCP is prohibited and v1 has no remote-library dependency"
+    "GWP-017 is IN_PROGRESS: assemble and polish the complete player-facing UI in one workstream, then show the overall result to the user",
+    "Do not create separate component, wireframe, responsive, prototype, audit, or handoff tasks; GWP-018 through GWP-026 are cancelled and folded into GWP-017"
   ],
   "lastUpdated": "2026-09-01"
 }

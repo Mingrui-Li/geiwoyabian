@@ -7,9 +7,9 @@ Every new window or conversation must:
 1. Read this file completely.
 2. Read `docs/START_HERE.md` and `docs/STATUS.md`.
 3. Inspect `git status --short --branch` and recent commits.
-4. Read the selected `docs/tasks/GWP-xxx.md` task card and all of its required references.
-5. Start only when the task is `READY` and every dependency is `DONE`.
-6. Claim the task by setting its card to `IN_PROGRESS` before implementation.
+4. Read the active `docs/tasks/GWP-xxx.md` workstream card and only the references needed for the next concrete action.
+5. Continue an existing `IN_PROGRESS` workstream unless another live window is actively editing it; otherwise start only when it is `READY` and every dependency is `DONE`.
+6. Claim a `READY` workstream by setting its card to `IN_PROGRESS` before implementation.
 
 Do not infer the next task from chat history. Repository status and task cards control execution.
 
@@ -23,16 +23,17 @@ Do not infer the next task from chat history. Repository status and task cards c
 ## Multi-window ownership
 
 - Serial handoff is the default for this OPC project.
+- A workstream may span multiple conversations. Do not create a new task card merely because a conversation ended or because one screen/component is finished.
 - Parallel work is allowed only when every involved task card has `parallel_safe: true`, uses a separate branch/worktree, and has non-overlapping `edit_scope` entries.
 - There is no separate review/integration window. The window executing a task owns implementation, verification, its task-branch integration, public status synchronization, and dependency unlocking through `DONE`.
 - An execution window may update `docs/STATUS.md`, `docs/DECISIONS.md`, its own task card, and the immediately dependent task card as mandatory completion bookkeeping, even when those coordination files are not repeated in the task's `edit_scope`.
 - Do not edit another active task's implementation files or completion record.
-- Never work on a task already marked `IN_PROGRESS` by another window.
+- Never work on a workstream currently being edited by another live window; an `IN_PROGRESS` card from a finished conversation is the handoff point for the next window.
 - Preserve all unrelated or user-owned changes. If an overlap cannot be avoided, stop and record the conflict in the task card.
 
 ## Engineering constraints
 
-- `GWP-026` Figma design freeze is a hard prerequisite for every Cocos task. Before it is `DONE`, do not initialize, merge, or implement the formal Cocos project, scenes, HUD, navigation, prefabs, or gameplay flow.
+- `GWP-017` complete Figma UI is the single prerequisite for formal Cocos development. Before it is `DONE` and approved by the user, do not implement the formal Cocos project, scenes, HUD, navigation, prefabs, or gameplay flow.
 - Target Cocos Creator 3.8.7+ and TypeScript.
 - Keep core gameplay independent from Douyin APIs. All platform calls belong behind a platform adapter.
 - Prefer data-driven item variants over item-specific scripts.
@@ -55,18 +56,17 @@ Do not infer the next task from chat history. Repository status and task cards c
 
 - Do not edit `.idea/` or other user-local IDE files.
 - Do not add progression, monetization, social, or content systems before the core feel milestone passes its acceptance test.
-- Do not start a Cocos graybox before the complete Figma screen system, states, responsive frames, prototype, and Dev Handoff have passed review.
+- Do not start formal Cocos development before the complete player-facing Figma UI has been shown to and approved by the user.
 - Do not reduce the product target to a prototype or MVP. Milestones are validation stages on the way to the complete v1.0 scope in `docs/PROJECT_PLAN.md`.
 - Do not add leaderboards, guilds, a home/base system, story, or multiplayer; these are permanent product exclusions.
 - Verification should include a Cocos build check and a playable interaction check once the project is initialized.
 
-## Mandatory task completion
+## Workstream progress and completion
 
-Before ending an implementation conversation:
+Before ending any implementation conversation:
 
-- Run the task's verification steps and `git diff --check`.
-- Fill in the task card's completion record with actual changes, files, verification, risks, and follow-ups.
-- Resolve every acceptance item in the same execution window; do not hand the task to a second review window.
-- Move the task directly from `IN_PROGRESS` to `DONE`, unlock the next dependency from `BLOCKED` to `READY`, and update `docs/STATUS.md` only after verification passes.
-- Record cross-cutting decisions in `docs/DECISIONS.md` and synchronize affected source documents.
-- Integrate the task branch into `main` and leave the repository in a state the next execution window can understand without reading the conversation.
+- Save useful work, run checks proportional to the actual change, and leave one concise progress note in the active workstream card.
+- Keep the workstream `IN_PROGRESS` when the player-visible outcome is unfinished; the next conversation continues it directly.
+- Do not create phase checklists, evidence ledgers, per-component tasks, or repeated screenshot/hash audits unless they solve a concrete defect or release risk.
+- When the whole workstream outcome is complete, run its final acceptance, mark it `DONE`, unlock the next workstream, update `docs/STATUS.md`, and integrate the branch into `main`.
+- There is no separate review/integration conversation.

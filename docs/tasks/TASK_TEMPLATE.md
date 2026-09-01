@@ -1,54 +1,29 @@
 ---
 id: GWP-XXX
-title: 简短任务名称
-phase: PX
+title: 可观察的完整工作流结果
 status: BLOCKED
-priority: P1
 depends_on: []
-parallel_safe: false
 owner: unassigned
 branch: null
-started_at: null
 updated_at: 'YYYY-MM-DD'
 edit_scope:
-  - path/or/module
-  - docs/STATUS.md
-do_not_edit:
-  - unrelated/path
+  - relevant/path
 ---
 
-# GWP-XXX：任务名称
+# GWP-XXX：工作流名称
 
-## 目标
+## 最终结果
 
-用一句话描述本任务完成后可观察到的结果。
+描述玩家或开发者最终能直接看到、运行或使用的完整结果。
 
-## 开始前必须阅读
+## 必要边界
 
-- `AGENTS.md`
-- `docs/START_HERE.md`
-- `docs/STATUS.md`
-- 与任务相关的产品、技术或设计文档
+- 只写真正影响范围或安全的限制。
 
-## 交付物
+## 当前进度
 
-- [ ] 明确、可检查的交付物
+- 已完成：
+- 下一步：
+- 真实阻塞：无
 
-## 验收
-
-- [ ] 可执行的构建、测试或人工检查
-- [ ] `git diff --check` 通过
-
-## 不在本任务范围
-
-- 明确禁止顺手扩张的内容
-
-## 完成记录
-
-任务进入 `DONE` 前由同一执行窗口填写并核验：
-
-- 实际完成：
-- 关键文件：
-- 验证与结果：
-- 未完成/风险：
-- 新决策或后续任务建议：
+工作流可以跨多个对话保持`IN_PROGRESS`。不要为子步骤创建新任务，也不要用大段checklist替代实际产出。
