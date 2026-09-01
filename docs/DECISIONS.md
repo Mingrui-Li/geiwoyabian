@@ -127,3 +127,10 @@
 - 状态：ACCEPTED
 - 决策：停止按组件、流程、屏幕、适配、原型、审计和交接拆任务。剩余工作只保留`GWP-017`完整Figma UI与`GWP-030`完整Cocos开发两个工作流；每个工作流可以跨多个对话持续推进。`GWP-018`至`GWP-026`并入GWP-017，`GWP-031`至`GWP-037`并入GWP-030。
 - 影响：旧24类规格只作防遗漏参考，不要求24张独立画板；不再要求逐组件截图、逐节点metadata、重复SHA证明或单独Dev Handoff任务。Figma完整UI仍先于Cocos，用户确认GWP-017后直接进入GWP-030。产品完整v1.0范围和永久排除项不变。
+
+## D-019：Image-2必须先于Figma整屏设计
+
+- 日期：2026-09-01
+- 状态：ACCEPTED
+- 决策：2026-09-01前的当前Figma设计全部废弃。正式UI固定按`Image-2整屏母稿 → 用户确认 → figma-mcp-rust从空白重建 → 用户确认 → Cocos`执行，任何窗口不得跳过Image-2直接在Figma设计页面。
+- 影响：旧Figma变量、样式、组件和页面不得复用为新UI视觉输入。首轮Image-2主入口、游戏、结算母稿存放于`design/wip/gwp-017-image2-ui-masters/`；未获用户确认前禁止Figma写入。

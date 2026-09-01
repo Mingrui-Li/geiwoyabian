@@ -4,8 +4,8 @@
   "taskId": "GWP-017",
   "branch": "codex/gwp-017-gameplay-components",
   "integratedInto": null,
-  "phase": "complete-ui-in-progress",
-  "step": "assemble-player-facing-screens",
+  "phase": "image2-visual-masters-in-progress",
+  "step": "await-user-approval-before-clean-figma-rebuild",
   "file": {
     "name": "mini-game",
     "key": "83pqrCcig644vC20QXM5G1",
@@ -545,8 +545,9 @@
     "GWP-016-visual-qa"
   ],
   "pending": [
-    "GWP-017 is IN_PROGRESS: assemble and polish the complete player-facing UI in one workstream, then show the overall result to the user",
-    "Do not create separate component, wireframe, responsive, prototype, audit, or handoff tasks; GWP-018 through GWP-026 are cancelled and folded into GWP-017"
+    "All current GWP Figma design is rejected and must not be reused; wait for explicit user approval of Image-2 visual masters before any Figma write",
+    "GWP-017 Image-2 WIP masters: design/wip/gwp-017-image2-ui-masters/home-v01.png, game-v01.png, result-v01.png",
+    "After approval, clear the rejected GWP Section content and rebuild from blank using figma-mcp-rust only"
   ],
   "lastUpdated": "2026-09-01"
 }

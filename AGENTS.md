@@ -41,7 +41,8 @@ Do not infer the next task from chat history. Repository status and task cards c
 - The complete v1.0 is intentionally local-first and does not need a gameplay backend.
 - Keep the first interactive package small; do not load later chapter art before it is needed.
 - Figma is the source of truth for all final player-facing screens. Do not invent final UI directly in Cocos.
-- gpt-image-2 outputs are visual inputs, not finished screen designs. Compose, align, tokenize, and validate them in Figma before implementation.
+- The mandatory UI order is `Image-2 complete-screen visual master → user visual approval → clean Figma reconstruction → Cocos implementation`. Never start a Figma screen before its Image-2 master is approved.
+- All Figma work produced before the 2026-09-01 GWP-017 reset is rejected and must not be reused as visual input. gpt-image-2 outputs define the visual target; Figma rebuilds them into editable production screens.
 - Use exact Figma nodes plus screenshots when implementing UI, and perform a visual parity pass before considering a screen complete.
 - Figma design-system mutations are sequential. Never run two design-writing windows or `use_figma` mutations against this project at the same time.
 
